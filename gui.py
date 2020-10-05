@@ -1,23 +1,42 @@
 import pyglet
 from pyglet.window import mouse, key
+from constants import *
 
-window = pyglet.window.Window(700,700,"TaskTrack")
+
+
+greeting_text = 'Welcome to tasktrack.  To add a new task, press the plus \
+sign.'
+
+
+
+##The 'Add Task' button size and screen location information
+ADD_TASK_SIZE = 40
+ADD_TASK_COORDS = [WNDW_WIDTH//2-ADD_TASK_SIZE,WNDW_HEIGHT-130]
+
+
+window = pyglet.window.Window(WNDW_WIDTH,WNDW_HEIGHT,"TaskTrack")
 
 background = pyglet.shapes.Rectangle(x=0,y=0,width=700,
-                            height=700,color=(255,255,255))
-background.draw()
-window.clear()
-background.draw()
-print("done")
-event_logger = pyglet.window.event.WindowEventLogger()
-window.push_handlers(event_logger)
+                    height=700,color=WHITE_3)
 
-# rectang = pyglet.shapes.Rectangle(x=50,y=50,
-#             width=100,height=50,color = (55,55,255))
+greeting_label = pyglet.text.Label(greeting_text,
+                        x=30,y=WNDW_HEIGHT-30,bold=True,color=BLACK)
 
-# label = pyglet.text.Label("document", x=window.width//2,y=window.height//2,
-# anchor_x='center',anchor_y='center')
+add_task_btn = pyglet.shapes.Rectangle(
+                            x=ADD_TASK_COORDS[0],
+                            y=ADD_TASK_COORDS[1],
+                            width=ADD_TASK_SIZE,
+                            height=ADD_TASK_SIZE,
+                            color=DODGER_BLUE_3)
 
+task_btn_icon = pyglet.text.Label('+',x=ADD_TASK_COORDS[0]+12,
+    y=ADD_TASK_COORDS[1]+11 ,bold=True,color=BLACK,font_size=20)
+
+
+# document = pyglet.text.document.FormattedDocument()
+# layout = pyglet.text.layout.IncrementalTextLayout(document, 30, 20)
+# caret = pyglet.text.caret.Caret(layout)
+# window.push_handlers(caret)
 
 class TaskBox:
 
@@ -26,18 +45,18 @@ class TaskBox:
         self.label = label
         self.x = x
         self.y = y
+        self.color = TASK_BX_COLOR
 
-    def draw_btn(self):
 
-        task = pyglet.shapes.Rectangle(x=self.x,y=self.y,
-                    width=100,height=50,color = (173, 216, 230))
-        # task_border = pyglet.shapes.Rectangle(x=self.win_size[0]//2,y=self.win_size[1]//2,
-        #             width=100,height=50,color = (55,55,255))
+    def draw_task_box(self):
 
-        label = pyglet.text.Label(self.label, x=task.position[0]+20,
-                                    y=task.position[1]+20)
-        task.draw()
-        label.draw()
+        self.task = pyglet.shapes.Rectangle(x=self.x,y=self.y,
+              width=TASK_BX_WIDTH,height=TASK_BX_HEIGHT,color = self.color)
+
+        self.title = pyglet.text.Label(self.label, x=self.task.position[0]+20,
+                                    y=self.task.position[1]+20)
+        self.task.draw()
+        self.title.draw()
 
 
     def add_info(self,description):
@@ -47,46 +66,64 @@ class TaskBox:
 
 
     def isOver(self,pos):
-        if pos[0] >self.x and pos[0] < self.x + 100:
-            if pos[1] > self.y and pos[0] > self.y - 50:
+        if pos[0] > self.x and pos[0] < self.x + TASK_BX_WIDTH:
+            if pos[1] > self.y and pos[1] < self.y + TASK_BX_HEIGHT:
                 return True
 
 
     def time_adjuster(self,time):
         pass
 
-# rectang = pyglet.shapes.Rectangle(x=win_size[0]//2,y=win_size[1]//2,
-#             width=100,height=50,color = (55,55,255))
 
-# @window.event
-
-
-
-
-new_tang = TaskBox("Task1",50,50)
-double_tang = TaskBox("AnotherTask",90,90)
-
+# new_tang = TaskBox("Task1",50,WNDW_HEIGHT - 80)
+# double_tang = TaskBox("AnotherTask",150,WNDW_HEIGHT - 80)
+# TASK_BX_LIST.append(new_tang)
+# TASK_BX_LIST.append(double_tang)
 
 
 @window.event
 def on_draw():
     window.clear()
     background.draw()
-    new_tang.draw_btn()
-    double_tang.draw_btn()
+    greeting_label.draw()
+    add_task_btn.draw()
+    task_btn_icon.draw()
+
+    if TASK_BX_LIST:
+        for item in TASK_BX_LIST:
+            item.draw_task_box()
 
 
 @window.event
 def on_mouse_motion(x,y,dx,dy):
-    try:
-        if new_tang.isOver((x,y)):
-            print(x,y)
-            new_tang.color = (200,200,200)
-        else:
-            new_tang.color = (173, 216, 230)
-            print("Its elsed")
-    except:
-        print("no")
+    #Change add task button on hover
+    if ADD_TASK_COORDS[0] < x < ADD_TASK_COORDS[0]+ADD_TASK_SIZE and \
+    ADD_TASK_COORDS[1] < y < ADD_TASK_COORDS[1]+ADD_TASK_SIZE:
+            add_task_btn.color = GREEN_3
+    else:
+        add_task_btn.color = DODGER_BLUE_3
+
+    #Change different task's box on hover
+    if TASK_BX_LIST:
+        for item in TASK_BX_LIST:
+            if item.isOver((x,y)):
+                item.color = (30,30,100)
+            else:
+                item.color = TASK_BX_COLOR
+
+
+@window.event
+def on_mouse_press(x, y, button, modifiers):
+    if button == mouse.LEFT and \
+    ADD_TASK_COORDS[0] < x < ADD_TASK_COORDS[0]+ADD_TASK_SIZE and \
+    ADD_TASK_COORDS[1] < y < ADD_TASK_COORDS[1]+ADD_TASK_SIZE:
+        print('clicked')
+
+    if TASK_BX_LIST:
+        for item in TASK_BX_LIST:
+            if button == mouse.LEFT and item.isOver((x,y)):
+                print('The left mouse button was pressed over '+item.label)
+
 
 if __name__ == '__main__':
     pyglet.app.run()
