@@ -19,3 +19,10 @@ TASK_BX_LIST = []
 TASK_BX_HEIGHT = 50
 TASK_BX_WIDTH = 100
 TASK_BX_COLOR = TEAL
+
+##The 'Add Task' button size and screen location information
+ADD_TASK_SIZE = 40
+ADD_TASK_COORDS = [WNDW_WIDTH//2-ADD_TASK_SIZE,WNDW_HEIGHT-130]
+
+GREETING_TEXT = 'Welcome to tasktrack.  To add a new task, press the plus \
+sign.'
