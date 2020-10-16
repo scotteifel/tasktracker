@@ -4,92 +4,195 @@ from constants import *
 
 
 class Window(pyglet.window.Window):
-
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.background = pyglet.shapes.Rectangle(x=0,y=0,width=700,
-                            height=700,color=WHITE_3)
+        super(Window,self).__init__(*args, **kwargs)
+        self.batch = pyglet.graphics.Batch()
 
         self.greeting_label = pyglet.text.Label(GREETING_TEXT,
-                                x=50,y=WNDW_HEIGHT-40,bold=True,color=BLACK)
+            x=50, y=WNDW_HEIGHT-40, bold=True, color=BLACK,
+            batch = self.batch)
 
-        self.add_task_btn = pyglet.shapes.Rectangle(
-                                    x=ADD_TASK_COORDS[0],
-                                    y=ADD_TASK_COORDS[1],
-                                    width=ADD_TASK_SIZE,
-                                    height=ADD_TASK_SIZE,
-                                    color=DODGER_BLUE_3)
+        self.add_task_btn = pyglet.shapes.Rectangle(x=ADD_ICON_COORDS[0],
+            y=ADD_ICON_COORDS[1], width=ADD_ICON_SIZE, height=ADD_ICON_SIZE,
+            color=DODGER_BLUE_3, batch = self.batch)
 
-        self.task_btn_icon = pyglet.text.Label('+',x=ADD_TASK_COORDS[0]+12,
-            y=ADD_TASK_COORDS[1]+11 ,bold=True,color=BLACK,font_size=20)
-
+        self.task_btn_icon = pyglet.text.Label('+',x=ADD_ICON_COORDS[0]+12,
+            y=ADD_ICON_COORDS[1]+11 ,bold=True, color=BLACK, font_size=20,
+            batch=self.batch)
 
     def on_draw(self):
+        pyglet.gl.glClearColor(1, 1, 1, 1)
         self.clear()
-        self.background.draw()
-        self.greeting_label.draw()
-        self.add_task_btn.draw()
-        self.task_btn_icon.draw()
-
-        if TASK_BX_LIST:
-            for item in TASK_BX_LIST:
-                item.draw_task_box()
-
+        self.batch.draw()
 
     def on_mouse_motion(self, x,y,dx,dy):
-        #Change add task button on hover
-        if ADD_TASK_COORDS[0] < x < ADD_TASK_COORDS[0]+ADD_TASK_SIZE and \
-        ADD_TASK_COORDS[1] < y < ADD_TASK_COORDS[1]+ADD_TASK_SIZE:
+        #Change "+" button color on hover
+        if ADD_ICON_COORDS[0] < x < ADD_ICON_COORDS[0]+ADD_ICON_SIZE and \
+        ADD_ICON_COORDS[1] < y < ADD_ICON_COORDS[1]+ADD_ICON_SIZE:
                 self.add_task_btn.color = GREEN_3
         else:
                 self.add_task_btn.color = DODGER_BLUE_3
 
-        #Change different task's box on hover
-        if TASK_BX_LIST:
-            for item in TASK_BX_LIST:
-                if item.isOver((x,y)):
-                    item.color = (30,30,100)
-                else:
-                    item.color = TASK_BX_COLOR
+        # #Change different task's box on hover
+        # if TASK_BX_LIST:
+        #     for item in TASK_BX_LIST:
+        #         if item.isOver((x,y)):
+        #             item.color = (30,30,100)
+        #         else:
+        #             item.color = TASK_BX_COLOR
 
 
     def on_mouse_press(self, x, y, button, modifiers):
         if button == mouse.LEFT and \
-        ADD_TASK_COORDS[0] < x < ADD_TASK_COORDS[0] + ADD_TASK_SIZE and \
-        ADD_TASK_COORDS[1] < y < ADD_TASK_COORDS[1] + ADD_TASK_SIZE:
+        ADD_ICON_COORDS[0] < x < ADD_ICON_COORDS[0] + ADD_ICON_SIZE and \
+        ADD_ICON_COORDS[1] < y < ADD_ICON_COORDS[1] + ADD_ICON_SIZE:
             self.new_task()
-            print('clicked')
 
         if TASK_BX_LIST:
             for item in TASK_BX_LIST:
                 if button == mouse.LEFT and item.isOver((x,y)):
-                    print('The left mouse button was pressed over '+item.label)
+                    pass
 
     def new_task(self):
         AddTask(WNDW_WIDTH//2,WNDW_HEIGHT//2,"New Task")
 
 
+
 class AddTask(pyglet.window.Window):
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.width = 400
-        self.height = 150
+        super().__init__(550, 500, caption='Text entry')
+        self.batch = pyglet.graphics.Batch()
+        self.greeting_label = pyglet.text.Label('Here I am. Enter new task',
+            x=20,y=self.height-30,bold=True,color=BLACK, batch = self.batch)
 
-        self.background = pyglet.shapes.Rectangle(x=0,y=0,width=self.width,
-                            height=self.height,color=WHITE_3)
+        self.btn = EnterIcon('+',50,self.height-100,50,60,DODGER_BLUE_3,
+                                BLACK, self.batch)
+        self.widget = TextWidget('', 100, 100, 130, self.batch)
+        self.text_cursor = self.get_system_mouse_cursor('text')
 
-        self.greeting_label = pyglet.text.Label('Hey',
-                                x=10,y=10,bold=True,color=BLACK)
+        self.focus = None
+        self.set_focus(self.widget)
 
     def on_draw(self):
-        self.background.draw()
-        self.greeting_label.draw()
+        pyglet.gl.glClearColor(1, 1, 1, 1)
+        self.clear()
+        self.batch.draw()
+
+    def on_mouse_motion(self, x, y, dx, dy):
+            if self.widget.hit_test(x, y):
+                self.set_mouse_cursor(self.text_cursor)
+            else:
+                self.set_mouse_cursor(None)
+
+            if self.btn.hit_test(x,y):
+                self.btn.add_task_btn.color = GREEN_3
+            else:
+                self.btn.add_task_btn.color = DODGER_BLUE_3
 
 
-class TaskBox:
+    def on_mouse_press(self, x, y, button, modifiers):
+            if self.widget.hit_test(x, y):
+                self.set_focus(self.widget)
+            else:
+                self.set_focus(None)
 
+    def on_text(self, text):
+        if self.focus:
+            self.focus.caret.on_text(text)
+
+    def on_text_motion(self, motion):
+        if self.focus:
+            self.focus.caret.on_text_motion(motion)
+
+    def on_text_motion_select(self, motion):
+        if self.focus:
+            self.focus.caret.on_text_motion_select(motion)
+
+        elif symbol == pyglet.window.key.ESCAPE:
+            pyglet.app.exit()
+
+    def on_key_press(self, symbol, modifiers):
+
+        if symbol == pyglet.window.key.ENTER:
+            print(self.widget.document.text)
+
+        if symbol == pyglet.window.key.ESCAPE:
+            pyglet.app.exit()
+
+
+    def set_focus(self, focus):
+        if self.focus:
+            self.focus.caret.visible = False
+            self.focus.caret.mark = self.focus.caret.position = 0
+
+        self.focus = focus
+        if self.focus:
+            self.focus.caret.visible = True
+            self.focus.caret.mark = 0
+            self.focus.caret.position = len(self.focus.document.text)
+
+
+class EnterIcon(object):
+    # A pressable icon
+    def __init__(self,text,x,y, width, height, box_color, icon_color,batch):
+        self.text = text
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.box_color = box_color
+        self.icon_color = icon_color
+
+        self.add_task_btn = pyglet.shapes.Rectangle(x=self.x, y=self.y,
+                    width=self.width, height=self.height, color=self.box_color,
+                    batch = batch)
+
+        self.task_btn_icon = pyglet.text.Label(self.text,x=self.x+12,
+            y=self.y+11 ,bold=True, color=self.icon_color, font_size=20,
+            batch=batch)
+
+
+    def hit_test(self, x, y):
+        return (0 < x - self.x < self.width and 0 < y - self.y < self.height)
+
+
+class Rectangle(object):
+    '''Draws a rectangle into a batch.'''
+    def __init__(self, x1, y1, x2, y2, batch):
+        self.vertex_list = batch.add(4, pyglet.gl.GL_QUADS, None,
+            ('v2i', [x1, y1, x2, y1, x2, y2, x1, y2]),
+            ('c4B', [200, 200, 220, 255] * 4)
+        )
+
+
+class TextWidget(object):
+    def __init__(self, text, x, y, width, batch):
+        self.document = pyglet.text.document.UnformattedDocument(text)
+        self.document.set_style(0, len(self.document.text),
+            dict(color=(0, 0, 0, 255)))
+
+        font = self.document.get_font()
+        height = font.ascent - font.descent
+
+        self.layout = pyglet.text.layout.IncrementalTextLayout(
+                  self.document, width, height*3, multiline=True, batch=batch)
+        self.caret = pyglet.text.caret.Caret(self.layout)
+
+        self.layout.x = x
+        self.layout.y = y
+
+        # Rectangular outline
+        pad = 2
+        self.rectangle = Rectangle(x - pad, y - pad,
+                         x + width + pad, y + height*3 + pad, batch)
+
+    def hit_test(self, x, y):
+        return (0 < x - self.layout.x < self.layout.width and
+                0 < y - self.layout.y < self.layout.height)
+
+
+class TaskBox(object):
     def __init__(self,label,x,y):
         self.win_size = window.get_size()
         self.label = label
@@ -99,7 +202,6 @@ class TaskBox:
 
 
     def draw_task_box(self):
-
         self.task = pyglet.shapes.Rectangle(x=self.x,y=self.y,
               width=TASK_BX_WIDTH,height=TASK_BX_HEIGHT,color = self.color)
 
@@ -125,6 +227,10 @@ class TaskBox:
         pass
 
 
-if __name__ == '__main__':
+def main():
     this1 = Window(WNDW_WIDTH,WNDW_HEIGHT,"TaskTrack")
     pyglet.app.run()
+
+
+if __name__ == '__main__':
+    main()
