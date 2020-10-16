@@ -6,6 +6,8 @@ from constants import *
 class Window(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
         super(Window,self).__init__(*args, **kwargs)
+        self.task_list = []
+        self.t_grid = int(50)
         self.batch = pyglet.graphics.Batch()
 
         self.greeting_label = pyglet.text.Label(GREETING_TEXT,
@@ -33,14 +35,12 @@ class Window(pyglet.window.Window):
         else:
                 self.add_task_btn.color = DODGER_BLUE_3
 
-        # #Change different task's box on hover
-        # if TASK_BX_LIST:
-        #     for item in TASK_BX_LIST:
-        #         if item.isOver((x,y)):
-        #             item.color = (30,30,100)
-        #         else:
-        #             item.color = TASK_BX_COLOR
-
+        if self.task_list:
+            for item in self.task_list:
+                if item.hit_test(x,y):
+                    item.add_task_btn.color = GREEN_3
+                else:
+                    item.add_task_btn.color = DODGER_BLUE_3
 
     def on_mouse_press(self, x, y, button, modifiers):
         if button == mouse.LEFT and \
@@ -48,15 +48,17 @@ class Window(pyglet.window.Window):
         ADD_ICON_COORDS[1] < y < ADD_ICON_COORDS[1] + ADD_ICON_SIZE:
             self.new_task()
 
-        if TASK_BX_LIST:
-            for item in TASK_BX_LIST:
-                if button == mouse.LEFT and item.isOver((x,y)):
-                    pass
-
     def new_task(self):
         AddTask(WNDW_WIDTH//2,WNDW_HEIGHT//2,"New Task")
 
+    def render_new_task(self, description):
+        self.task_list.append(EnterIcon(description,self.t_grid,self.t_grid,
+                            40,50,GREY_3,BLACK,self.batch))
+        print(len(self.task_list))
+        for item in self.task_list:
+            print(item)
 
+        self.t_grid += 50
 
 class AddTask(pyglet.window.Window):
 
@@ -92,10 +94,18 @@ class AddTask(pyglet.window.Window):
 
 
     def on_mouse_press(self, x, y, button, modifiers):
-            if self.widget.hit_test(x, y):
-                self.set_focus(self.widget)
-            else:
-                self.set_focus(None)
+        description = ''
+
+        if self.widget.hit_test(x, y):
+            self.set_focus(self.widget)
+        else:
+            self.set_focus(None)
+
+        if self.btn.hit_test(x,y):
+            send_to_main_window(self.widget.document.text)
+            type(self.widget.document.text)
+            # self.widget.document.text.delete_text()
+            self.close()
 
     def on_text(self, text):
         if self.focus:
@@ -115,11 +125,10 @@ class AddTask(pyglet.window.Window):
     def on_key_press(self, symbol, modifiers):
 
         if symbol == pyglet.window.key.ENTER:
-            print(self.widget.document.text)
+            pass
 
         if symbol == pyglet.window.key.ESCAPE:
             pyglet.app.exit()
-
 
     def set_focus(self, focus):
         if self.focus:
@@ -145,13 +154,12 @@ class EnterIcon(object):
         self.icon_color = icon_color
 
         self.add_task_btn = pyglet.shapes.Rectangle(x=self.x, y=self.y,
-                    width=self.width, height=self.height, color=self.box_color,
-                    batch = batch)
+                width=self.width, height=self.height, color=self.box_color,
+                                                            batch = batch)
 
         self.task_btn_icon = pyglet.text.Label(self.text,x=self.x+12,
             y=self.y+11 ,bold=True, color=self.icon_color, font_size=20,
             batch=batch)
-
 
     def hit_test(self, x, y):
         return (0 < x - self.x < self.width and 0 < y - self.y < self.height)
@@ -226,11 +234,8 @@ class TaskBox(object):
     def time_adjuster(self,time):
         pass
 
+def send_to_main_window(description):
+    this1.render_new_task(description)
 
-def main():
-    this1 = Window(WNDW_WIDTH,WNDW_HEIGHT,"TaskTrack")
-    pyglet.app.run()
-
-
-if __name__ == '__main__':
-    main()
+this1 = Window(WNDW_WIDTH,WNDW_HEIGHT,"TaskTrack")
+pyglet.app.run()

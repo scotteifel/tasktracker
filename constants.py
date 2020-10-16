@@ -28,3 +28,7 @@ ADD_ICON_COORDS = [WNDW_WIDTH//2-ADD_ICON_SIZE,WNDW_HEIGHT-130]
 
 GREETING_TEXT = 'Welcome to tasktrack.  To add a new task, press the plus \
 sign.'
+
+
+        # self.task_boxes.append(EnterIcon('new thing',
+        #                         190,190,70,100,GREY,BLACK_3,self.batch))
