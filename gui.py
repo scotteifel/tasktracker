@@ -16,16 +16,17 @@ class Window(pyglet.window.Window):
 
         self.add_task_btn = pyglet.shapes.Rectangle(x=ADD_ICON_COORDS[0],
             y=ADD_ICON_COORDS[1], width=ADD_ICON_SIZE, height=ADD_ICON_SIZE,
-            color=DODGER_BLUE_3, batch = self.batch)
+            color=DODGER_BLUE_3)
 
         self.task_btn_icon = pyglet.text.Label('+',x=ADD_ICON_COORDS[0]+12,
-            y=ADD_ICON_COORDS[1]+11 ,bold=True, color=BLACK, font_size=20,
-            batch=self.batch)
+            y=ADD_ICON_COORDS[1]+11 ,bold=True, color=BLACK, font_size=20)
 
     def on_draw(self):
         pyglet.gl.glClearColor(1, 1, 1, 1)
         self.clear()
         self.batch.draw()
+        self.add_task_btn.draw()
+        self.task_btn_icon.draw()
 
     def on_mouse_motion(self, x,y,dx,dy):
         #Change "+" button color on hover
@@ -42,11 +43,26 @@ class Window(pyglet.window.Window):
                 else:
                     item.add_task_btn.color = DODGER_BLUE_3
 
+
     def on_mouse_press(self, x, y, button, modifiers):
         if button == mouse.LEFT and \
         ADD_ICON_COORDS[0] < x < ADD_ICON_COORDS[0] + ADD_ICON_SIZE and \
         ADD_ICON_COORDS[1] < y < ADD_ICON_COORDS[1] + ADD_ICON_SIZE:
             self.new_task()
+
+        description_window = None
+        # if button == mouse.LEFT:
+        #     if self.task_list:
+        #         for item in self.task_list:
+        #             if item.hit_test(x,y):
+        #                 if description_window == None:
+        #                     pyglet.window.Window(70, 70)
+        #             else:
+        #                 if description_window == None:
+        #                     pass
+        #                 else:
+        #                     description_window.close()
+        #                     description_window = None
 
     def new_task(self):
         AddTask(WNDW_WIDTH//2,WNDW_HEIGHT//2,"New Task")
@@ -91,7 +107,6 @@ class AddTask(pyglet.window.Window):
                 self.btn.add_task_btn.color = GREEN_3
             else:
                 self.btn.add_task_btn.color = DODGER_BLUE_3
-
 
     def on_mouse_press(self, x, y, button, modifiers):
         description = ''
