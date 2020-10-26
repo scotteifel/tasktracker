@@ -1,6 +1,7 @@
 
-#Colors have 2 values, 3 count is for Rectangle objects,
-#4 count is for label objects
+# Colors have 2 values each,
+# 3 values are for Rectangle objects,
+# 4 are for label objects
 
 TEAL = (43,141,160)
 DODGER_BLUE = (30,144,255,255)
@@ -13,6 +14,7 @@ GREEN_3 = (0,123,0)
 GREEN = (0,123,0,255)
 GREY = (200, 200, 220, 255)
 GREY_3 = (200, 200, 220)
+ORANGE = (204,136,0)
 
 WNDW_WIDTH = 600
 WNDW_HEIGHT = 500
