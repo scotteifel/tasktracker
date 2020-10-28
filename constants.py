@@ -1,20 +1,37 @@
+from win32api import GetSystemMetrics
+
+S_WIDTH = GetSystemMetrics(0)
+S_HEIGHT = GetSystemMetrics(1)
+
+def window_placer():
+
+    width = S_WIDTH//2
+    height = S_HEIGHT//2
+    return width, height
 
 # Colors have 2 values each,
 # 3 values are for Rectangle objects,
 # 4 are for label objects
 
-TEAL = (43,141,160)
+CHRISTMAS_GREEN = (0,135,62,255)
+CHRISTMAS_GREEN_3 = (0,135,62)
+LIGHTSABER_GREEN = (47,249,36,255)
+LIGHTSABER_GREEN_3 = (47,249,36)
+
 DODGER_BLUE = (30,144,255,255)
 DODGER_BLUE_3 = (30,144,255)
 WHITE = (255,255,255,255)
 WHITE_3 = (255,255,255)
 BLACK = (0,0,0,255)
 BLACK_3 = (0,0,0)
-GREEN_3 = (0,123,0)
 GREEN = (0,123,0,255)
+GREEN_3 = (0,123,0)
 GREY = (200, 200, 220, 255)
 GREY_3 = (200, 200, 220)
-ORANGE = (204,136,0)
+
+##Must have only 3 values
+ICON_BOX_COLOR = CHRISTMAS_GREEN_3
+ICON_BOX_COLOR_HOVER = LIGHTSABER_GREEN_3
 
 WNDW_WIDTH = 600
 WNDW_HEIGHT = 500
@@ -22,7 +39,6 @@ WNDW_HEIGHT = 500
 TASK_BX_LIST = []
 TASK_BX_HEIGHT = 50
 TASK_BX_WIDTH = 100
-TASK_BX_COLOR = TEAL
 
 ##The 'Add Task' button size and screen location information
 ADD_ICON_SIZE = 40
