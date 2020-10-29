@@ -1,7 +1,11 @@
 import pyglet
 from pyglet.window import mouse, key
+from create_db import create_database
+from db_functions import *
 from constants import *
 
+##EVENT LOGGER CODE
+event_logger = pyglet.window.event.WindowEventLogger()
 
 class Window(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
@@ -23,6 +27,13 @@ class Window(pyglet.window.Window):
 
         self.task_btn_icon = pyglet.text.Label('+',x=ADD_ICON_COORDS[0]+12,
             y=ADD_ICON_COORDS[1]+11 ,bold=True, color=BLACK, font_size=20)
+
+    def retrieve_saved_tasks(self):
+        tasks = retrieve_tasks()
+        print(tasks)
+        if tasks:
+            for item in tasks:
+                self.render_new_task(item[0],item[1])
 
     def on_draw(self):
         pyglet.gl.glClearColor(1, 1, 1, 1)
@@ -55,14 +66,20 @@ class Window(pyglet.window.Window):
         description_window = None
         if button == mouse.LEFT:
             if self.task_list:
+                #cnt used to match db result with self.task_list place
+                cnt = 0
                 for item in self.task_list:
                     if hit_test(item, x, y):
                         if description_window == None:
+                            info = retrieve_tasks()
+                            print(info[cnt], ' IS INFO 1')
+
                             x_y = self.get_location()
                             description_window = TaskDescription(
-                                        item.description, x_y[0], x_y[1])
+                                        info[cnt][1], x_y[0], x_y[1])
                             return
                     else:
+                        cnt += 1
 
                         if description_window == None:
                             pass
@@ -104,9 +121,9 @@ class Window(pyglet.window.Window):
         #                   height=50,
         #                   font_size=12)
 
-        self.task_list.append((name, task_name, description))
+        self.task_list.append(name)
 
-        self.task_grid_x += 75
+        self.task_grid_x += 85
 
     # def render_new_task(self, task_name, description):
     #     name = self.task_grid_x
@@ -126,11 +143,13 @@ class Window(pyglet.window.Window):
     #     self.task_grid_x += 75
 
 
+
+
 class AddTask(pyglet.window.Window):
 
     def __init__(self, *args, **kwargs):
         super().__init__(550, 500, caption='ADD TASK')
-        self.set_location(S_WIDTH//2-120,S_HEIGHT//3)
+        self.set_location(S_WIDTH//2-160,S_HEIGHT//3-30)
         self.batch = pyglet.graphics.Batch()
         self.greeting_label = pyglet.text.Label('Enter new task',
         x=200,y=self.height-30,bold=True,color=BLACK, batch = self.batch)
@@ -152,6 +171,8 @@ height=ADD_ICON_SIZE)
 
         self.focus = None
         self.set_focus(self.task_description)
+        # self.push_handlers(event_logger)
+
 
     def on_draw(self):
         pyglet.gl.glClearColor(1, 1, 1, 1)
@@ -186,6 +207,9 @@ height=ADD_ICON_SIZE)
         elif hit_test(self.add_task_btn, x,y):
             send_to_main_window(self.task.document.text,
                                 self.task_description.document.text)
+            new_task_info(self.task.document.text,
+                                self.task_description.document.text)
+            retrieve_tasks()
             self.close()
 
         else:
@@ -332,6 +356,8 @@ def send_to_main_window(task_name, description):
 def hit_test(obj, x, y):
     return (0 < x - obj.x < obj.width and 0 < y - obj.y < obj.height)
 
-this1 = Window(WNDW_WIDTH,WNDW_HEIGHT,"TaskTrack")
 
+create_database()
+this1 = Window(WNDW_WIDTH,WNDW_HEIGHT,"TaskTrack")
+this1.retrieve_saved_tasks()
 pyglet.app.run()
