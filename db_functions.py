@@ -1,16 +1,16 @@
 import sqlite3
 
 
-def new_task_info(name,blurb):
+def new_task_info(name,blurb,count):
 
     conn = sqlite3.connect('main.db')
     cur = conn.cursor()
     cur.execute('''CREATE TABLE IF NOT EXISTS tasks (title TEXT,
-                description TEXT)''')
+                description TEXT, time INTEGER)''')
     conn.commit()
 
-    cur.execute('''INSERT INTO tasks (title, description) VALUES(?,?)''',
-                                         (name,blurb))
+    cur.execute('''INSERT INTO tasks (title, description, time)
+                    VALUES(?,?,?)''', (name,blurb,count))
     conn.commit()
 
     cur.close()
@@ -23,6 +23,7 @@ def retrieve_tasks():
     try:
         qry = cur.execute('''SELECT * FROM tasks''')
         info = qry.fetchall()
+        print(info)
     except:
         pass
 
