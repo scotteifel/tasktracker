@@ -2,6 +2,7 @@ import sqlite3
 
 
 def new_task_info(name,blurb,count):
+    print(count)
 
     conn = sqlite3.connect('main.db')
     cur = conn.cursor()
@@ -23,7 +24,6 @@ def retrieve_tasks():
     try:
         qry = cur.execute('''SELECT * FROM tasks''')
         info = qry.fetchall()
-        print(info)
     except:
         pass
 
