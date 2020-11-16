@@ -6,13 +6,13 @@ from create_db import create_database
 from db_functions import *
 from constants import *
 
+global TIMER
+global handlers_on
 ##EVENT LOGGER CODE
 event_logger = pyglet.window.event.WindowEventLogger()
-global THREAD_COUNT
-global handlers_on
-global TIMER
+##Change to True to see events of windows in console.
 handlers_on = False
-THREAD_COUNT = 0
+
 
 class Window(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
@@ -28,6 +28,7 @@ class Window(pyglet.window.Window):
         #var used to make sure only one description window can open
         self.description_window = None
         self.task_item = 0
+        self.focus = None
 
         self.main_batch = pyglet.graphics.Batch()
         self.background = pyglet.graphics.OrderedGroup(0)
@@ -61,11 +62,24 @@ class Window(pyglet.window.Window):
                                     batch = self.main_batch,
                                     group = self.foreground)
 
-    def retrieve_saved_tasks(self):
-        tasks = retrieve_tasks()
-        if tasks:
-            for item in tasks:
-                self.render_new_task(item[0],item[1],item[2])
+        self.completed_tab_box = pyglet.shapes.Rectangle(
+                                            x=130,
+                                            y=580,
+                                            width=40,
+                                            height=10,
+                                            color=ICON_BOX_COLOR,
+                                            batch = self.main_batch,
+                                            group = self.background)
+
+        self.completed_tab = pyglet.text.Label(
+                                    'Complete',
+                                    x = 135,
+                                    y = 580,
+                                    bold=True,
+                                    color=BLACK,
+                                    font_size=20,
+                                    batch = self.main_batch,
+                                    group = self.foreground)
 
     def on_draw(self):
         pyglet.gl.glClearColor(1, 1, 1, 1)
@@ -81,15 +95,20 @@ class Window(pyglet.window.Window):
 
         if self.task_list:
             for item in self.task_list:
-                if hit_test(item[0], x, y):
-                    item[0].color = TASK_BTN_COLOR_HOVER
+                if hit_test(item["task"], x, y):
+                    item["task"].color = TASK_BTN_COLOR_HOVER
                 else:
-                    item[0].color = TASK_BTN_COLOR
+                    item["task"].color = TASK_BTN_COLOR
 
-                if hit_test(item[3], x, y):
-                    item[3].color = TASK_BTN_COLOR_HOVER
+                if hit_test(item["start_timer_box"], x, y):
+                    item["start_timer_box"].color = TASK_BTN_COLOR_HOVER
                 else:
-                    item[3].color = GREY_3
+                    item["start_timer_box"].color = GREY_3
+
+                if hit_test(item["delete_box"], x ,y):
+                    item["delete_box"].color = RED_3
+                else:
+                    item["delete_box"].color = GREY_3
 
 
     def on_mouse_press(self, x, y, button, modifiers):
@@ -103,89 +122,173 @@ class Window(pyglet.window.Window):
                 #cnt used to match db result with self.task_list place
                 #for showing the task button's description
                 cnt = 0
-                for item in self.task_list:
-                    if hit_test(item[0], x, y):
 
+                for item in self.task_list:
+                    if hit_test(item["task"], x, y):
                         if self.description_window:
                             return
                         else:
-                            info = retrieve_tasks()
+                            info=retrieve_description(item["task_label"].text)
                             x,y = self.get_location()
                             self.description_window = TaskDescription(
-                                        info[cnt][1], x, y)
+                                        info[1], x, y)
                             return
 
-                for item in self.task_list:
-                    if hit_test(item[3], x, y):
-                        global TIMER
-                        TIMER = int(item[2].document.text)
+                    elif hit_test(item["delete_box"], x, y):
 
-
-                        pyglet.clock.schedule_interval(countdown,
-                                                1,
-                                                item)
-                        # countdown(int(item[2].document.text),
-                        #             item)
-                       # thread_producer(int(item[2].document.text),
-                       #                      item)
+                        delete_task(item["task_label"].document.text)
+                        remove_task(item)
                         return
-                    # if hit_test(item[4], x, y):
-                    #     print("hit " + item[4])
-                    else:
-                        cnt += 1
+
+                    elif hit_test(item["start_timer_box"], x, y):
+                        global TIMER
+                        TIMER = int(item["task_time"].text)
+                        item["task_time"].text = str(TIMER-1)
+                        item["task_time_box"].color = LIGHTSABER_GREEN_3
+                        pyglet.clock.schedule_interval(
+                                                        countdown,
+                                                        60,
+                                                        item)
+                        return
+
+
+    def retrieve_saved_tasks(self):
+        #If statement will clean up the gui screen before tasks are drawn
+        #or redrawn
+        if len(self.task_list) != 0:
+            for item in self.task_list:
+                redraw_all_tasks(item)
+
+        self.task_list = []
+        self.task_grid_x = int(50)
+        self.task_grid_y = int(self.height-210)
+
+        tasks = retrieve_tasks()
+        if tasks:
+            for item in tasks:
+                self.render_new_task(item[0],item[1],item[2])
 
     def new_task(self):
         AddTaskWindow(WNDW_WIDTH//2,WNDW_HEIGHT//2,"New Task")
 
+    def show_complete(self, item):
+
+        self.check_box = pyglet.shapes.Rectangle(
+                                     item["task"].x + 1,
+                                     item["task"].y - 25,
+                                     width=14,
+                                     height=14,
+                                     color=LIGHTSABER_GREEN_3,
+                                     batch=self.main_batch,
+                                     group=self.background
+                                     )
+
+        self.check = pyglet.text.Label(
+                                     "!",
+                                     x = item["task"].x + 4,
+                                     y = item["task"].y - 23,
+                                     bold=True,
+                                     color=BLACK,
+                                     batch=self.main_batch,
+                                     group=self.foreground
+                                     )
+
+
     #Renders a new task.
     def render_new_task(self, task, description, timer):
-        self.task = task + "_" + str(self.task_item)
-        self.task_label = str(self.task) + '_Label'
-        self.task_timer = str(self.task) + '_Timer'
-        self.task_timer_box = self.task_timer + '_StartBox'
 
-        self.task = pyglet.shapes.Rectangle(self.task_grid_x,
+        ##Task description box
+        self.task = pyglet.shapes.Rectangle(
+                                     self.task_grid_x,
                                      self.task_grid_y,
                                      width=150,height=30,
                                      color=TASK_BTN_COLOR,
                                      batch=self.main_batch,
-                                     group=self.background)
+                                     group=self.background
+                                     )
 
-        self.task_label = pyglet.text.Label(task,
+        self.task_label = pyglet.text.Label(
+                                     task,
                                      x = self.task_grid_x + 4,
                                      y = self.task_grid_y + 5,
                                      bold=True,
                                      color=BLACK,
                                      batch=self.main_batch,
-                                     group=self.foreground)
+                                     group=self.foreground
+                                     )
+        ## Time count
+        self.task_time = pyglet.text.Label(
+                                     str(timer),
+                                     x = self.task_grid_x+30,
+                                     y = self.task_grid_y-27,
+                                     bold = True,
+                                     color = BLACK,
+                                     batch = self.main_batch,
+                                     group = self.foreground,
+                                     )
 
-        self.task_timer = TextWidget(str(timer),
-                                     self.task_grid_x+30,
-                                     self.task_grid_y-40,
-                                     30,
-                                     self.main_batch,
-                                     height = 10)
+        ##Box for time countdown
+        self.task_time_box = pyglet.shapes.Rectangle(
+                                      self.task_grid_x+24,
+                                      self.task_grid_y-32,
+                                      width = 30,
+                                      height = 23,
+                                      color = GREY_3,
+                                      batch=self.main_batch,
+                                      group = self.background
+                                      )
 
-        self.task_timer_box = pyglet.shapes.Rectangle(self.task_grid_x+70,
-                                     self.task_grid_y-30, width = 60,
-                                     height = 10,
+        ##Box pressed to start timer
+        self.start_timer_box = pyglet.shapes.Rectangle(
+                                     self.task_grid_x+70,
+                                     self.task_grid_y-30,
+                                     width = 50,
+                                     height = 18,
                                      color = GREY_3,
                                      batch=self.main_batch,
-                                     group = self.background)
+                                     group = self.background
+                                     )
 
-        self.lab = pyglet.text.Label('Start',
-                                     x = self.task_grid_x+70,
-                                     y = self.task_grid_y-30,
+        self.start = pyglet.text.Label(
+                                     'Start',
+                                     x = self.task_grid_x+73,
+                                     y = self.task_grid_y-28,
                                      bold=True,
                                      color=BLACK,
                                      batch = self.main_batch,
-                                     group = self.foreground)
+                                     group = self.foreground
+                                     )
 
-        self.task_list.append([self.task,
-                               self.task_label,
-                               self.task_timer,
-                               self.task_timer_box,
-                               self.lab])
+        self.delete_x = pyglet.text.Label(
+                                     'x',
+                                     x = self.task_grid_x+143,
+                                     y = self.task_grid_y-16,
+                                     bold=True,
+                                     color=BLACK,
+                                     batch = self.main_batch,
+                                     group = self.foreground
+                                     )
+
+        self.delete_box = pyglet.shapes.Rectangle(
+                                     self.task_grid_x+140,
+                                     self.task_grid_y-18,
+                                     width = 14,
+                                     height = 14,
+                                     color = GREY_3,
+                                     batch=self.main_batch,
+                                     group = self.background
+                                     )
+
+
+        self.task_list.append({"task" : self.task,
+                                "task_label" : self.task_label,
+                                "task_time" : self.task_time,
+                                "task_time_box" : self.task_time_box,
+                                "start_timer_box" : self.start_timer_box,
+                                "start" : self.start,
+                                "delete_x" : self.delete_x,
+                                "delete_box" : self.delete_box,
+                               })
 
         ## Places new tasks on grid plane
         if self.task_grid_y > 90:
@@ -195,13 +298,8 @@ class Window(pyglet.window.Window):
             self.task_grid_y = int(self.height-210)
             self.task_grid_x += 160
 
-        self.task_item += 1
-
-
-
 
 class AddTaskWindow(pyglet.window.Window):
-
     def __init__(self, *args, **kwargs):
         super().__init__(550, 500, caption='ADD TASK')
         self.set_location(S_WIDTH//2-160,S_HEIGHT//3-30)
@@ -210,12 +308,13 @@ class AddTaskWindow(pyglet.window.Window):
         self.foreground = pyglet.graphics.OrderedGroup(1)
         self.greeting_label = pyglet.text.Label(
                                     'Enter new task',
-                                    x=230,
+                                    x=220,
                                     y=self.height-30,
                                     bold=True,
                                     color=BLACK,
                                     batch = self.main_batch,
-                                    group = self.foreground)
+                                    group = self.foreground
+                                    )
 
         self.add_task_btn = pyglet.shapes.Rectangle(
                                     ADD_ICON_COORDS[0],
@@ -224,7 +323,8 @@ class AddTaskWindow(pyglet.window.Window):
                                     width=ADD_ICON_SIZE,
                                     height=ADD_ICON_SIZE,
                                     batch = self.main_batch,
-                                    group = self.background)
+                                    group = self.background
+                                    )
 
         self.add_task = pyglet.text.Label(
                                     '+',
@@ -234,17 +334,52 @@ class AddTaskWindow(pyglet.window.Window):
                                     color=BLACK,
                                     font_size=20,
                                     batch = self.main_batch,
-                                    group = self.foreground)
+                                    group = self.foreground
+                                    )
 
-        self.timer = TextWidget('', 270, 310, 30, self.main_batch)
-        self.task = TextWidget('New Task', 210, 240, 130, self.main_batch)
-        self.task_description = TextWidget('Description', 155, 170,
-                                        250,  self.main_batch)
+
+        self.timer = TextWidget('Mins', 270, 310, 35, self.main_batch,
+                                self.foreground)
+
+        self.task = TextWidget('Enter Task Name', 210, 245, 90,
+                                self.main_batch, self.foreground)
+
+        self.task_description = TextWidget('Enter Task Description', 155,
+                            170, 240,  self.main_batch,self.foreground)
+
+        self.timer_box = pyglet.shapes.Rectangle(
+                                      265,
+                                      344,
+                                      width = 50,
+                                      height = 25,
+                                      color = GREY_3,
+                                      batch=self.main_batch,
+                                      group = self.background
+                                      )
+
+        self.task_box = pyglet.shapes.Rectangle(
+                                      205,
+                                      240,
+                                      width = 110,
+                                      height = 60,
+                                      color = GREY_3,
+                                      batch=self.main_batch,
+                                      group = self.background
+                                      )
+
+        self.description_box = pyglet.shapes.Rectangle(
+                                      150,
+                                      165,
+                                      width = 260,
+                                      height = 70,
+                                      color = GREY_3,
+                                      batch=self.main_batch,
+                                      group = self.background
+                                      )
 
         self.tab_group = [self.timer, self.task, self.task_description]
 
         self.text_cursor = self.get_system_mouse_cursor('text')
-
         self.focus = None
         self.set_focus(self.timer)
 
@@ -257,13 +392,13 @@ class AddTaskWindow(pyglet.window.Window):
         self.main_batch.draw()
 
     def on_mouse_motion(self, x, y, dx, dy):
-        if self.task.hit_test(x, y):
+        if hit_test(self.timer_box, x, y):
             self.set_mouse_cursor(self.text_cursor)
 
-        elif self.task_description.hit_test(x, y):
+        elif hit_test(self.description_box, x, y):
             self.set_mouse_cursor(self.text_cursor)
 
-        elif self.timer.hit_test(x, y):
+        elif hit_test(self.task_box, x, y):
             self.set_mouse_cursor(self.text_cursor)
 
         else:
@@ -275,13 +410,13 @@ class AddTaskWindow(pyglet.window.Window):
             self.add_task_btn.color = ICON_BOX_COLOR
 
     def on_mouse_press(self, x, y, button, modifiers):
-        if self.task.hit_test(x, y):
+        if hit_test(self.task_box, x, y):
             self.set_focus(self.task)
 
-        elif self.task_description.hit_test(x, y):
+        elif hit_test(self.description_box, x, y):
             self.set_focus(self.task_description)
 
-        elif self.timer.hit_test(x, y):
+        elif hit_test(self.timer_box, x, y):
             self.set_focus(self.timer)
 
         elif hit_test(self.add_task_btn, x,y):
@@ -321,11 +456,13 @@ class AddTaskWindow(pyglet.window.Window):
         #Switch from name box to description box
         if symbol == pyglet.window.key.TAB:
             if self.focus == self.tab_group[0]:
-                self.set_focus(self.task_description)
-                return
+                self.set_focus(self.tab_group[1])
+
+            elif self.focus == self.tab_group[1]:
+                self.set_focus(self.tab_group[2])
+
             else:
-                self.set_focus(self.task)
-                return
+                self.set_focus(self.tab_group[0])
 
         if symbol == pyglet.window.key.ESCAPE:
             pyglet.app.exit()
@@ -343,14 +480,14 @@ class AddTaskWindow(pyglet.window.Window):
 
 
 class TaskDescription(pyglet.window.Window):
-
     def __init__(self,task_description,x,y):
         super().__init__(300,200, caption="Description")
         self.set_location(x+60,y+120)
         self.task_description = task_description
 
         self.greeting_label = pyglet.text.Label(self.task_description,
-                        x=10, y=self.height-15, bold=True, color=BLACK)
+                        x=10, y=self.height-15, bold=True,
+                        multiline = True, width = 280, color=BLACK)
 
         if handlers_on == True:
             self.push_handlers(event_logger)
@@ -364,27 +501,19 @@ class TaskDescription(pyglet.window.Window):
     def on_close(self):
         this1.description_window = None
         self.close()
+
+
 ######  End of window classes^^^^^ #########
 
-# class Timer(object):
-#     def __init__(self, amount, x, y, batch):
-#         print("inited")
-#         self.amount = amount
-#         self.main_batch = batch
-#         self.display = pyglet.text.Label(self.amount,x=40, y=40,
-#             batch = self.main_batch)
-#
-#     def start(self):
-#         pass
 
-
-###  Rectangle object goes with the TextWidget class
 class TextWidget(object):
-    def __init__(self, text, x, y, width, main_batch ,height = None):
+    def __init__(self, text, x, y, width, main_batch ,
+                foreground ,height = None):
         self.document = pyglet.text.document.UnformattedDocument(text)
         self.document.set_style(0, len(self.document.text),
                                 dict(color=(0, 0, 0, 255)))
         self.main_batch = main_batch
+        self.foreground = foreground
         self.text = text
 
         font = self.document.get_font()
@@ -394,81 +523,55 @@ class TextWidget(object):
         else:
             height = font.ascent - font.descent
 
-        pad = 2
-        self.rectangle = Rectangle(x - pad, y - pad,
-        x + width + pad, y + height*3 + pad, batch = self.main_batch)
-
         self.layout = pyglet.text.layout.IncrementalTextLayout(
                                                 self.document,
                                                 width,
                                                 height*3,
                                                 multiline=True,
-                                                batch = self.main_batch)
+                                                wrap_lines=True,
+                                                batch=self.main_batch,
+                                                group=self.foreground)
         self.caret = pyglet.text.caret.Caret(self.layout)
 
         self.layout.x = x
         self.layout.y = y
 
-    def hit_test(self, x, y):
-        return (0 < x - self.layout.x < self.layout.width and
-                0 < y - self.layout.y < self.layout.height)
-
-
-class Rectangle(object):
-    '''Draws a rectangle into a batch.'''
-    def __init__(self, x1, y1, x2, y2, batch):
-        self.vertex_list = batch.add(4, pyglet.gl.GL_QUADS, None,
-            ('v2i', [x1, y1, x2, y1, x2, y2, x1, y2]),
-            ('c4B', [200, 200, 220, 255] * 4)
-        )
-
 
 def send_to_main_window(task_name, description, timer):
     this1.render_new_task(task_name, description,timer)
 
+
 def hit_test(obj, x, y):
     return (0 < x - obj.x < obj.width and 0 < y - obj.y < obj.height)
 
+
+def redraw_all_tasks(task):
+    for item in task.values():
+        item.delete()
+
+
+def remove_task(task):
+    for item in task.values():
+        item.delete()
+
+    delete_task(task["task_label"].text)
+
+    this1.task_list.remove(task)
+    this1.retrieve_saved_tasks()
+
+
 def countdown(dt, item):
     global TIMER
-
-    item[2].document.text = str(TIMER)
-    print('working')
     TIMER -= 1
-    if TIMER == -1:
+
+    item["task_time"].text = ""
+    item["task_time"].text = str(TIMER)
+    update_timer(TIMER, item["task_label"].text)
+
+
+    if TIMER == 0:
         pyglet.clock.unschedule(countdown)
-    print("DONE")
-    # time.sleep(1)
-    # print('after operation, times is', TIMER)
-
-
-# def countdown(item):
-#     # item[2].document.text = "started"
-#     global TIMER
-#     while TIMER != 0:
-#         time.sleep(1)
-#         # item[2].document.text = str(TIMER)
-#         TIMER -= 1
-#         print('after operation, times is', TIMER)
-
-    # while times:
-    #     item[2].document.text = str(times)
-    #     time.sleep(1)
-    #     times -= 1
-
-
-# def thread_producer(cntdown, item):
-#     global THREAD_COUNT
-#     global TIMER
-#     TIMER = cntdown
-#     item[2].document.text = 'yes'
-#
-#     name = 'thread_' + str(THREAD_COUNT)
-#     name = threading.Thread(target=countdown, args=(item,))
-#     name.start()
-#     THREAD_COUNT += 1
-
-
+        this1.show_complete(item)
 
 
 
