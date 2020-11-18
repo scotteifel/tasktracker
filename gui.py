@@ -104,6 +104,11 @@ class Window(pyglet.window.Window):
                 else:
                     item["start_timer_box"].color = GREY_3
 
+                if hit_test(item["edit_box"], x, y):
+                    item["edit_box"].color = LIGHTSABER_GREEN_3
+                else:
+                    item["edit_box"].color = GREY_3
+
                 if hit_test(item["delete_x_box"], x ,y):
                     item["delete_x_box"].color = RED_3
                 else:
@@ -123,7 +128,8 @@ class Window(pyglet.window.Window):
 
             elif hit_test(self.completed_tab_box, x, y):
                 x,y = self.get_location()
-                completed_win = CompletedWindow("This is an item", x, y)
+                info = retrieve_completions()
+                completed_win = CompletedWindow(info, x, y)
 
             if self.task_list:
                 #cnt used to match db result with self.task_list place
@@ -153,9 +159,9 @@ class Window(pyglet.window.Window):
                         return
 
                     elif hit_test(item["edit_box"], x, y):
-                        print("The task label text is ", item["task_label"].text)
+                        print("The task label text is ",
+                        item["task_label"].text)
                         self.edit_task(item["task_label"].text)
-
                         return
 
                     elif hit_test(item["delete_x_box"], x, y):
@@ -166,10 +172,15 @@ class Window(pyglet.window.Window):
                     item_index += 1
 
                     try:
-                         item["check_box"]
-                         print("yes")
+                         if hit_test(item["check_box"], x, y):
+                            info=retrieve_description(item["task_label"].text)
+
+                            add_completed_task(item["task_label"].text,info[0],
+                                              int(item["task_time"].text), 1)
+                            delete_task(item["task_label"].document.text)
+                            remove_task(item)
                     except:
-                        print("not a checkbox")
+                        pass
 
 
     def retrieve_saved_tasks(self):
@@ -219,7 +230,9 @@ class Window(pyglet.window.Window):
                                      group=self.background
                                      )
 
+        self.task_list[item_index]["check"] = self.check
         self.task_list[item_index]["check_box"] = self.check_box
+
 
 
 
@@ -311,8 +324,8 @@ class Window(pyglet.window.Window):
 
         self.edit = pyglet.text.Label(
                                      '...',
-                                     x = self.task_grid_x+143,
-                                     y = self.task_grid_y-3,
+                                     x = self.task_grid_x+135,
+                                     y = self.task_grid_y-29,
                                      bold=True,
                                      color=BLACK,
                                      batch = self.main_batch,
@@ -320,10 +333,10 @@ class Window(pyglet.window.Window):
                                      )
 
         self.edit_box = pyglet.shapes.Rectangle(
-                                     self.task_grid_x+140,
-                                     self.task_grid_y-5,
-                                     width = 14,
-                                     height = 14,
+                                     self.task_grid_x+133,
+                                     self.task_grid_y-33,
+                                     width = 18,
+                                     height = 12,
                                      color = GREY_3,
                                      batch=self.main_batch,
                                      group = self.background
@@ -491,6 +504,7 @@ class AddTaskWindow(pyglet.window.Window):
                                  self.timer.document.text)
             if db_check == True:
                 main_window.retrieve_saved_tasks()
+
             else:
                 send_to_main_window(self.task.document.text,
                                     self.task_description.document.text,
@@ -573,11 +587,12 @@ class TaskDescription(pyglet.window.Window):
 
 ##Window to show the comleted tasks listed.
 class CompletedWindow(pyglet.window.Window):
-    def __init__(self, item1, x, y):
-        super().__init__(300, 200, caption = "Completed tasks")
+    def __init__(self, info, x, y):
+        super().__init__(500, 400, caption = "Completed tasks")
         self.set_location(x + 60, y + 120)
-        print("The item is ", item1)
-        self.greeting_label = pyglet.text.Label(item1,
+        for item in info:
+            print(item)
+        self.greeting_label = pyglet.text.Label(info[0][0],
                         x=10, y=self.height-15, bold=True,
                         multiline=True, width=280, color=BLACK)
 
@@ -658,8 +673,7 @@ def countdown(dt, item, item_index):
 
     if TIMER == 0:
         pyglet.clock.unschedule(countdown)
-        main_window.show_complete(item, item_index)
-
+        main_window.show_completed_tasks(item, item_index)
 
 
 create_database()
