@@ -1,6 +1,49 @@
 import sqlite3
 
 
+def retrieve_project_time():
+    conn = sqlite3.connect('main.db')
+    cur = conn.cursor()
+
+    try:
+        qry = cur.execute('''SELECT * FROM project_time''')
+        info = qry.fetchone()[0]
+    except:
+        info = 0
+    cur.close()
+    conn.close()
+    return info
+
+
+def run_project_timer():
+    conn = sqlite3.connect('main.db')
+    cur = conn.cursor()
+
+    cur.execute('''CREATE TABLE IF NOT EXISTS project_time
+                   (time INTEGER)''')
+    conn.commit()
+
+    info = cur.execute('''SELECT * FROM project_time''')
+    qry = cur.fetchone()
+
+    #if statement used to catch the first time this func is run from program
+    if not qry:
+            cur.execute('''INSERT INTO project_time (time) VALUES (?)''',
+                        (1,))
+            conn.commit()
+            cur.close()
+            conn.close()
+            return 1
+
+    new_time = qry[0] + 1
+    cur.execute('''UPDATE project_time SET time = (?)''', (new_time,))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+    return new_time
+
+
 def new_task_info(name,blurb,count):
 
     count = int(count)
@@ -8,10 +51,10 @@ def new_task_info(name,blurb,count):
     cur = conn.cursor()
 
     cur.execute('''CREATE TABLE IF NOT EXISTS tasks (title TEXT,
-    description TEXT, time INTEGER)''')
+    description TEXT, time INTEGER, estimated_time INTEGER)''')
     conn.commit()
     try:
-        qry = cur.execute('''SELECT * FROM tasks WHERE title = (?)''', (name,))
+        qry =cur.execute('''SELECT * FROM tasks WHERE title = (?)''',(name,))
         info = qry.fetchone()[0]
         cur.execute('''UPDATE tasks SET title = (?), description=(?),
                     time=(?) WHERE title = (?)''', (name,blurb,count,info))
@@ -20,8 +63,8 @@ def new_task_info(name,blurb,count):
         conn.close()
         return True
     except:
-        cur.execute('''INSERT INTO tasks (title, description, time)
-                        VALUES(?,?,?)''', (name,blurb,count))
+        cur.execute('''INSERT INTO tasks (title, description, time,
+                  estimated_time) VALUES(?,?,?,?)''', (name,blurb,count,count))
         conn.commit()
         cur.close()
         conn.close()
@@ -32,29 +75,33 @@ def retrieve_completions():
     conn = sqlite3.connect('main.db')
     cur = conn.cursor()
 
-    qry = cur.execute('''SELECT * FROM completions''')
-    info = qry.fetchall()
+    try:
+        qry = cur.execute('''SELECT * FROM completions''')
+        info = qry.fetchall()
+    except:
+        info = False
+        pass
 
     cur.close()
     conn.close()
     return info
 
 
-def add_completed_task(title, description, time, on_time):
+def add_completed_task(title, description, time, initial_time, on_time,notes):
     conn = sqlite3.connect("main.db")
     cur = conn.cursor()
 
     cur.execute('''CREATE TABLE IF NOT EXISTS completions (title TEXT,
-                description TEXT, time INTEGER, on_time INTEGER)''')
+        description TEXT, time INTEGER, on_time INTEGER, notes TEXT)''')
 
     qry = cur.execute('''INSERT INTO completions (title, description, time,
-            on_time) VALUES (?,?,?,?)''',(title,description,time,on_time))
+        initial_time, on_time, notes) VALUES (?,?,?,?,?,?)''',
+        (title, description, time, initial_time, on_time, notes))
     conn.commit()
-
-    qry1 = cur.execute('''SELECT * FROM completions''')
 
     cur.close()
     conn.close()
+    return
 
 def retrieve_tasks():
     conn = sqlite3.connect('main.db')
@@ -85,7 +132,8 @@ def retrieve_description(title):
     cur = conn.cursor()
     info = None
     try:
-        qry = cur.execute('''SELECT * FROM tasks WHERE title = (?)''',(title,))
+        qry =cur.execute('''SELECT description FROM tasks WHERE title = (?)''',
+                        (title,))
         info = qry.fetchone()
     except:
         pass
