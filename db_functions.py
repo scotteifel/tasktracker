@@ -32,6 +32,7 @@ def new_task_info(name,blurb,count):
 
 
 def add_completed_task(title, description, time, on_time, notes):
+    print(notes, '  is notes')
     conn = sqlite3.connect("main.db")
     cur = conn.cursor()
 
@@ -136,6 +137,22 @@ def retrieve_description(title):
     info = None
     try:
         qry=cur.execute('''SELECT description FROM tasks WHERE title = (?)''',
+                        (title,))
+        info = qry.fetchone()
+    except:
+        pass
+
+    cur.close()
+    conn.close()
+    return info
+
+
+def retrieve_notes(title):
+    conn = sqlite3.connect('main.db')
+    cur = conn.cursor()
+    info = None
+    try:
+        qry=cur.execute('''SELECT notes FROM completions WHERE title = (?)''',
                         (title,))
         info = qry.fetchone()
     except:
