@@ -32,7 +32,6 @@ def new_task_info(name,blurb,count):
 
 
 def add_completed_task(title, description, time, on_time, notes):
-    print(notes, '  is notes')
     conn = sqlite3.connect("main.db")
     cur = conn.cursor()
 
@@ -42,11 +41,10 @@ def add_completed_task(title, description, time, on_time, notes):
     qry = cur.execute('''INSERT INTO completions (title, description,
         time, on_time, notes) VALUES (?,?,?,?,?)''',
         (title, description, time, on_time, notes))
-    conn.commit()
 
+    conn.commit()
     cur.close()
     conn.close()
-    print("Add completed task ran")
     return
 
 
@@ -141,6 +139,7 @@ def retrieve_description(title):
         info = qry.fetchone()
     except:
         pass
+
 
     cur.close()
     conn.close()
