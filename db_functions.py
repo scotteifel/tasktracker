@@ -1,9 +1,6 @@
 import sqlite3
 
 
-
-
-
 def new_task_info(name,blurb,count):
 
     count = int(count)
@@ -29,6 +26,27 @@ def new_task_info(name,blurb,count):
         cur.close()
         conn.close()
         return False
+
+
+def check_completed_names(text):
+    conn = sqlite3.connect('main.db')
+    cur = conn.cursor()
+
+    try:
+        qry = cur.execute('''SELECT * FROM completions WHERE title = (?)''',
+                            (text,))
+        _ = qry.fetchone()
+
+        if _ == None:
+            result = False
+        else:
+            result = True
+    except:
+        result = False
+    cur.close()
+    conn.close()
+
+    return result
 
 
 def add_completed_task(title, description, time, on_time, notes):

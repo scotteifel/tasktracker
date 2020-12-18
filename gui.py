@@ -33,6 +33,7 @@ class Home_Window(pyglet.window.Window):
         #vars used to make sure only one window can open
         self.description_window_open = False
         self.add_task_window_open = False
+        self.completed_window_open = False
 
         self.task_item = 0
         #Enables hovering of ! box to return to grey after the mouse is moved
@@ -173,8 +174,11 @@ class Home_Window(pyglet.window.Window):
                               task_text = 'Enter Task Name',
                               task_description = 'Enter task description')
             elif hit_test(self.completed_tab_box, x, y):
-                if retrieve_completions():
-                    self.completed_win = Completed_Window(480,700,
+                if self.completed_window_open == True:
+                    return
+
+                elif retrieve_completions():
+                    self.completed_win = Completed_Window(430,700,
                                 "Completed Tasks",visible=False)
 
             if self.task_list:
@@ -523,6 +527,34 @@ class AddTaskWindow(pyglet.window.Window):
         self.focus = None
         self.set_focus(self.timer)
 
+    def invalid_entry_label(self):
+
+            alert = pyglet.text.Label(
+                            "-Invalid name",
+                            x = self.width - 200,
+                            y = self.height - 220,
+                            bold = True,
+                            color = BLACK,
+                            batch = self.main_batch,
+                            group = self.foreground
+                            )
+
+    def add_task_to_db(self):
+
+            db_check = new_task_info(self.task.document.text,
+                         self.task_description.document.text,
+                         self.timer.document.text)
+            if db_check == True:
+                main_window.retrieve_saved_tasks()
+
+            else:
+                send_to_main_window(self.task.document.text,
+                                    self.timer.document.text)
+                retrieve_tasks()
+
+            main_window.add_task_window_open = False
+            self.close()
+
     def on_draw(self):
         pyglet.gl.glClearColor(1, 1, 1, 1)
         self.clear()
@@ -558,20 +590,21 @@ class AddTaskWindow(pyglet.window.Window):
             self.set_focus(self.timer)
 
         elif hit_test(self.add_task_btn, x,y):
-            db_check = new_task_info(self.task.document.text,
-                                 self.task_description.document.text,
-                                 self.timer.document.text)
-            if db_check == True:
-                main_window.retrieve_saved_tasks()
 
+            if check_completed_names(self.task.document.text) == False:
+                ##It equals 0 if no tasks have been added yet
+                if len(main_window.task_list) != 0:
+
+                    for item in main_window.task_list:
+                        if item["task_label"].text == self.task.document.text:
+                            self.invalid_entry_label()
+                            return
+                    else:
+                        self.add_task_to_db()
+                else:
+                        self.add_task_to_db()
             else:
-                send_to_main_window(self.task.document.text,
-                                    self.timer.document.text)
-                retrieve_tasks()
-
-            main_window.add_task_window_open = False
-            self.close()
-
+                self.invalid_entry_label()
         else:
             self.set_focus(None)
 
@@ -583,18 +616,16 @@ class AddTaskWindow(pyglet.window.Window):
             #User must enter a number for the time amount
             elif self.focus == self.timer and text not in ('0123456789'):
                 return
+            #User must keep the description under 130 characters
             elif self.focus == self.task_description and \
-                 len(self.task_description.document.text) > 130:
+                           len(self.task_description.document.text) > 130:
                 return
             else:
                 self.focus.caret.on_text(text)
 
-                26*6
-
     def on_text_motion(self, motion):
         if self.focus:
             self.focus.caret.on_text_motion(motion)
-
 
     def on_text_motion_select(self, motion):
         if self.focus:
@@ -637,7 +668,7 @@ class AddTaskWindow(pyglet.window.Window):
             self.focus.caret.mark = 0
             self.focus.caret.position = len(self.focus.document.text)
 
-
+# fix the notes layout
 class AddNotesWindow(pyglet.window.Window):
     def __init__(self, x, y, item):
         super().__init__(470, 300, caption = "Task Summary")
@@ -812,11 +843,15 @@ class Completed_Window(pyglet.window.Window):
         self.notes_window_open = False
         self.notes_box_list = []
         self.completed_tab_list = []
+        self.current_row = 0
+        main_window.completed_window_open = True
 
         info = retrieve_completions()
         row_counter = len(info)//4
+        if 4 < len(info) < 9:
+            self.width = 690
 
-        if row_counter == 2:
+        elif row_counter == 2:
             self.width = 1020
 
         elif row_counter > 2:
@@ -859,12 +894,12 @@ class Completed_Window(pyglet.window.Window):
                                          batch=self.main_batch,
                                          group = self.background)
 
-        self.x_offset = 25
+        self.x_offset = 30
         self.y_offset = self.height - 160
         self.greeting_label = pyglet.text.Label(
                                         'Completed Tasks',
-                                        x=self.width//2-40,
-                                        y=self.height-40,
+                                        x=self.width//2-50,
+                                        y=self.height-37,
                                         bold=True,
                                         multiline=True,
                                         width=280,
@@ -876,26 +911,54 @@ class Completed_Window(pyglet.window.Window):
         if row_counter > 1:
             self.greeting_label.font_size = 16
 
-        self.completed_task_list = organize_completed_tab(info)
+        # self.completed_task_list = organize_completed_tab(info)
+        self.completed_task_list = info
         self.delete_list = []
         self.page_number = 0
+        self.task_place_counter = 0
+
         self.set_visible()
+        for item in self.completed_task_list:
+            if self.current_row < 3:
+                self.draw_task(item)
+                self.task_place_counter += 1
+            else:
+                pass
 
-        for item in self.completed_task_list[0]:
-            self.draw_task(item)
+    def next_page(self):
+        if self.task_place_counter == len(self.completed_task_list):
+            pass
+        else:
+            self.page_number += 1
+            self.delete_drawn_tasks()
+            for item in self.completed_task_list[self.task_place_counter:]:
+                if self.current_row < 4:
+                    self.draw_task(item)
+                    self.task_place_counter += 1
+                else:
+                    pass
 
-    def forward(self,item):
-        self.page_number += 1
-        self.delete_drawn_tasks()
-        for _ in item:
-            self.draw_task(_)
 
-    def back(self,item):
+    def previous_page(self):
         self.page_number -= 1
         self.delete_drawn_tasks()
-        for _ in item:
-            self.draw_task(_)
+        if self.page_number == 0:
+            self.task_place_counter = 0
+            for item in self.completed_task_list:
+                if self.current_row < 3:
+                    self.draw_task(item)
+                    self.task_place_counter += 1
+        else:
+            num = len(self.completed_task_list) - self.task_place_counter
 
+            for item in self.completed_task_list[num]:
+                if self.current_row < 3:
+                    self.draw_task(item)
+                    self.task_place_counter -= 1
+                else:
+                    pass
+
+#This clears all tasks so a new "page" of tasks can be drawn (back/forward)
     def delete_drawn_tasks(self):
         self.x_offset = 25
         self.y_offset = self.height - 160
@@ -908,7 +971,6 @@ class Completed_Window(pyglet.window.Window):
             for task in item:
                 task.delete()
         self.delete_list = []
-
     def draw_task(self,item):
         self.task_name_intro = pyglet.text.Label(
                                     'Name: ',
@@ -996,6 +1058,7 @@ class Completed_Window(pyglet.window.Window):
         self.notes_box_list.append({"task_name" : self.task_name,
                                     "notes_box" : self.notes_box,
                                     })
+
         self.delete_list.append([self.task_description,
                                 self.task_name_intro,
                                 self.task_name,
@@ -1012,7 +1075,7 @@ class Completed_Window(pyglet.window.Window):
         text_height = self.task_description.layout.get_line_count()
         if text_height > 3:
             self.task_description.layout.height = 18 * text_height
-            self.task_description.layout.y=\
+            self.task_description.layout.y = \
                                 (self.y_offset - 41) - (9 * text_height)
         self.y_offset -= (20 * text_height)
         self.y_offset -= 110
@@ -1020,6 +1083,7 @@ class Completed_Window(pyglet.window.Window):
         if self.y_offset < 110:
             self.x_offset += 330
             self.y_offset = self.height - 160
+            self.current_row += 1
 
     def on_draw(self):
         pyglet.gl.glClearColor(1, 1, 1, 1)
@@ -1061,14 +1125,21 @@ class Completed_Window(pyglet.window.Window):
                         return
             try:
                 if hit_test(self.next_box, x, y):
-                    if self.page_number  != len(self.completed_task_list):
-                        self.forward(self.completed_task_list[self.page_number+1])
-
+                    if self.page_number  != 3:
+                # self.forward(
+                #         self.completed_task_list[self.page_number+1])
+                        self.current_row = 0
+                        self.next_page()
                 if hit_test(self.previous_box, x, y):
                     if self.page_number != 0:
-                        self.back(self.completed_task_list[self.page_number-1])
+                        # self.back(self.completed_task_list[self.page_number-1])
+                        self.current_row = 0
+                        self.previous_page()
             except:
                 pass
+    def on_close(self):
+        main_window.completed_window_open = False
+        self.close()
 
 class TaskDescription(pyglet.window.Window):
     def __init__(self,task_description,x,y, caption = "Description"):
