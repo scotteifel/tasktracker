@@ -1,3 +1,5 @@
+
+
 import pyglet
 import time
 import threading
@@ -13,6 +15,9 @@ event_logger = pyglet.window.event.WindowEventLogger()
 ##Change to True to see the events of the different windows in the console.
 handlers_on = False
 
+# 'Canvas not attached' bug fix \Lib\site-packages\pyglet\gl\base.py
+# lines 306 and 328 were changed.  now has a self.is_ok var
+# Bug happened sometimes when a window opened.  Didn't allow mouse events.
 
 class Home_Window(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
@@ -30,10 +35,12 @@ class Home_Window(pyglet.window.Window):
         self.task_list = []
         self.task_grid_x = int(50)
         self.task_grid_y = int(self.height-210)
-        #vars used to make sure only one window can open
+        # Vars used to make sure only one window can open and for canvas
+        # error check
         self.description_window_open = False
         self.add_task_window_open = False
         self.completed_window_open = False
+        self.notes_window_open = False
 
         self.task_item = 0
         #Enables hovering of ! box to return to grey after the mouse is moved
@@ -113,10 +120,12 @@ class Home_Window(pyglet.window.Window):
                                     batch = self.main_batch,
                                     group = self.foreground)
 
+
     def on_draw(self):
         pyglet.gl.glClearColor(1, 1, 1, 1)
         self.clear()
         self.main_batch.draw()
+
 
     def on_mouse_motion(self, x,y,dx,dy):
         #Change "+" button color on hover
@@ -163,6 +172,7 @@ class Home_Window(pyglet.window.Window):
                     item["check_box"].color = LIGHTSABER_GREEN_3
                 else:
                     item["check_box"].color = GREY_3
+
 
     def on_mouse_press(self, x, y, button, modifiers):
         if button == mouse.LEFT:
@@ -236,7 +246,7 @@ class Home_Window(pyglet.window.Window):
                         if hit_test(item["check_box"], x, y):
                             x,y = self.get_location()
                             #Add additional notes window
-                            notes_window = AddNotesWindow(x, y, item)
+                            self.notes_window = AddNotesWindow(x, y, item)
                     except:
                         pass
 
@@ -257,6 +267,7 @@ class Home_Window(pyglet.window.Window):
             for item in tasks:
                 self.render_new_task(item[0],item[1])
 
+
     def edit_task(self, task):
 
         info = retrieve_task_info(task)
@@ -267,7 +278,7 @@ class Home_Window(pyglet.window.Window):
                               task_text = info[0],
                               task_description = info[1])
 
-    #Renders a new task.
+
     def render_new_task(self, task, timer):
 
         #Makes the selection box taller to fit in a longer name if nessecary
@@ -421,7 +432,7 @@ class Home_Window(pyglet.window.Window):
 
 class AddTaskWindow(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
-        super().__init__(550, 450, caption='ADD TASK')
+        super().__init__(550, 450, caption='ADD TASK', visible=False)
         self.set_location(S_WIDTH//2-160,S_HEIGHT//3-30)
         if handlers_on == True:
             self.push_handlers(event_logger)
@@ -429,7 +440,6 @@ class AddTaskWindow(pyglet.window.Window):
         self.main_batch = pyglet.graphics.Batch()
         self.background = pyglet.graphics.OrderedGroup(0)
         self.foreground = pyglet.graphics.OrderedGroup(1)
-        main_window.add_task_window_open = True
 
         self.greeting_label = pyglet.text.Label(
                                             "Enter task information",
@@ -527,6 +537,15 @@ class AddTaskWindow(pyglet.window.Window):
         self.focus = None
         self.set_focus(self.timer)
 
+        main_window.add_task_window_open = True
+        # Canvas not attached bug fix in \Lib\site-packages\pyglet\gl\base.py
+        # lines 306 and 328 were changed.  now has a self.is_ok var
+        if self.context.is_ok == 0:
+            main_window.add_task_window_open = False
+            self.close()
+        self.set_visible()
+
+
     def invalid_entry_label(self):
 
             alert = pyglet.text.Label(
@@ -539,6 +558,7 @@ class AddTaskWindow(pyglet.window.Window):
                             group = self.foreground
                             )
 
+
     def add_task_to_db(self):
 
             db_check = new_task_info(self.task.document.text,
@@ -548,17 +568,18 @@ class AddTaskWindow(pyglet.window.Window):
                 main_window.retrieve_saved_tasks()
 
             else:
-                send_to_main_window(self.task.document.text,
-                                    self.timer.document.text)
+                main_window.render_new_task(task_name, timer)
                 retrieve_tasks()
 
             main_window.add_task_window_open = False
             self.close()
 
+
     def on_draw(self):
         pyglet.gl.glClearColor(1, 1, 1, 1)
         self.clear()
         self.main_batch.draw()
+
 
     def on_mouse_motion(self, x, y, dx, dy):
         ##Shows the text_cursor when hovering over these boxes
@@ -578,6 +599,7 @@ class AddTaskWindow(pyglet.window.Window):
             self.add_task_btn.color = ICON_BOX_COLOR_HOVER
         else:
             self.add_task_btn.color = ICON_BOX_COLOR
+
 
     def on_mouse_press(self, x, y, button, modifiers):
         if hit_test(self.task_box, x, y):
@@ -608,6 +630,7 @@ class AddTaskWindow(pyglet.window.Window):
         else:
             self.set_focus(None)
 
+
     def on_text(self, text):
         if self.focus:
             #User can only enter in under 21 characters for title name
@@ -623,9 +646,11 @@ class AddTaskWindow(pyglet.window.Window):
             else:
                 self.focus.caret.on_text(text)
 
+
     def on_text_motion(self, motion):
         if self.focus:
             self.focus.caret.on_text_motion(motion)
+
 
     def on_text_motion_select(self, motion):
         if self.focus:
@@ -633,6 +658,7 @@ class AddTaskWindow(pyglet.window.Window):
 
         elif symbol == pyglet.window.key.ESCAPE:
             pyglet.app.exit()
+
 
     def on_key_press(self, symbol, modifiers):
 
@@ -652,165 +678,11 @@ class AddTaskWindow(pyglet.window.Window):
 
         if symbol == pyglet.window.key.ESCAPE:
             pyglet.app.exit()
+
 
     def on_close(self):
         main_window.add_task_window_open = False
         self.close()
-
-    def set_focus(self, focus):
-        if self.focus:
-            self.focus.caret.visible = False
-            self.focus.caret.mark = self.focus.caret.position = 0
-
-        self.focus = focus
-        if self.focus:
-            self.focus.caret.visible = True
-            self.focus.caret.mark = 0
-            self.focus.caret.position = len(self.focus.document.text)
-
-# fix the notes layout
-class AddNotesWindow(pyglet.window.Window):
-    def __init__(self, x, y, item):
-        super().__init__(470, 300, caption = "Task Summary")
-        self.set_location(x + 60, y + 120)
-        if handlers_on == True:
-            self.push_handlers(event_logger)
-
-        self.main_batch = pyglet.graphics.Batch()
-        self.background = pyglet.graphics.OrderedGroup(0)
-        self.foreground = pyglet.graphics.OrderedGroup(1)
-        self.item = item
-
-        label_text = "Add notes about the completed task?"
-        self.greeting_label = pyglet.text.Label(label_text,
-                        x=90, y=self.height-30, bold=True,
-                        multiline=True, width=350, color=BLACK,
-                        batch=self.main_batch)
-        icon_x = self.width//2-20
-        self.add_task_btn = pyglet.shapes.Rectangle(
-                                            x=icon_x,
-                                            y=self.height-90,
-                                            width=ADD_ICON_SIZE,
-                                            height=ADD_ICON_SIZE,
-                                            color=ICON_BOX_COLOR,
-                                            batch = self.main_batch,
-                                            group = self.background)
-
-        self.add_task = pyglet.text.Label(
-                                    '+',
-                                    x=icon_x+12,
-                                    y=self.height-81,
-                                    bold=True,
-                                    color=BLACK,
-                                    font_size=20,
-                                    batch = self.main_batch,
-                                    group = self.foreground)
-
-        self.add_note = TextWidget(
-                                    "Add Note",
-                                    134,
-                                    82,
-                                    200,
-                                    self.main_batch,
-                                    self.foreground,
-                                    height=30)
-
-        self.add_note_box = pyglet.shapes.Rectangle(
-                                      130,
-                                      75,
-                                      width = 220,
-                                      height = 100,
-                                      color = GREY_3,
-                                      batch=self.main_batch,
-                                      group = self.background
-                                      )
-        self.text_cursor = self.get_system_mouse_cursor('text')
-        self.focus = None
-        self.set_focus(self.add_note)
-
-
-    def on_draw(self):
-        pyglet.gl.glClearColor(1, 1, 1, 1)
-        self.clear()
-        self.main_batch.draw()
-
-    def on_mouse_press(self, x, y, button, modifiers):
-
-        if button == mouse.LEFT:
-            if hit_test(self.add_task_btn, x, y):
-
-                title = self.item['task_label'].text
-                description = retrieve_description(title)[0]
-                # time = 0
-                time = retrieve_task_info(title)[-1]
-                on_time = 1
-                notes = self.add_note.document.text
-                add_completed_task(
-                                title,
-                                description,
-                                time,
-                                on_time,
-                                notes)
-
-                description = add_break_lines(description)
-                notes = add_break_lines(notes)
-                with open('records.txt', 'a') as file:
-                    _ = "Task Name: "+title+"\n"+"Description: "+ \
-                    description+"\n"+"Estimated Time to Complete: "+\
-                    str(time)+"\n"+"Was the Task Ontime? "+str(on_time)+\
-                    "\n"+"Notes: "+notes+"\n\n"
-
-                    file.write(_)
-
-                remove_task(self.item)
-                self.close()
-
-    def on_mouse_motion(self, x,y,dx,dy):
-        #Change "+" button color on hover
-        if hit_test(self.add_task_btn, x, y):
-                self.add_task_btn.color = ICON_BOX_COLOR_HOVER
-        else:
-                self.add_task_btn.color = ICON_BOX_COLOR
-
-        if hit_test(self.add_note_box, x, y):
-            self.set_mouse_cursor(self.text_cursor)
-        else:
-            self.set_mouse_cursor(None)
-
-
-    def on_key_press(self, symbol, modifiers):
-
-        if symbol == pyglet.window.key.ENTER:
-            pass
-
-        #Switch from name box to description box
-        if symbol == pyglet.window.key.TAB:
-            if self.focus == self.tab_group[0]:
-                self.set_focus(self.tab_group[1])
-
-            elif self.focus == self.tab_group[1]:
-                self.set_focus(self.tab_group[2])
-
-            else:
-                self.set_focus(self.tab_group[0])
-
-        if symbol == pyglet.window.key.ESCAPE:
-            pyglet.app.exit()
-
-    def on_text(self, text):
-        if self.focus:
-            self.focus.caret.on_text(text)
-
-    def on_text_motion(self, motion):
-        if self.focus:
-            self.focus.caret.on_text_motion(motion)
-
-    def on_text_motion_select(self, motion):
-        if self.focus:
-            self.focus.caret.on_text_motion_select(motion)
-
-        elif symbol == pyglet.window.key.ESCAPE:
-            pyglet.app.exit()
 
 
     def set_focus(self, focus):
@@ -834,17 +706,25 @@ class Completed_Window(pyglet.window.Window):
 
         if handlers_on == True:
             self.push_handlers(event_logger)
+        print("Down under event logger")
 
         self.main_batch = pyglet.graphics.Batch()
         self.background = pyglet.graphics.OrderedGroup(0)
         self.foreground = pyglet.graphics.OrderedGroup(1)
+
+        main_window.completed_window_open = True
+        # 'Canvas not attached' bug fix \Lib\site-packages\pyglet\gl\base.py
+        # lines 306 and 328 were changed.  now has a self.is_ok var
+        if self.context.is_ok == 0:
+            main_window.completed_window_open = False
+            self.close()
+
 
         #Makes sure the notes window is only opened once
         self.notes_window_open = False
         self.notes_box_list = []
         self.completed_tab_list = []
         self.current_row = 0
-        main_window.completed_window_open = True
 
         info = retrieve_completions()
         row_counter = len(info)//4
@@ -917,13 +797,14 @@ class Completed_Window(pyglet.window.Window):
         self.page_number = 0
         self.task_place_counter = 0
 
-        self.set_visible()
         for item in self.completed_task_list:
             if self.current_row < 3:
                 self.draw_task(item)
                 self.task_place_counter += 1
             else:
                 pass
+
+        self.set_visible()
 
     def next_page(self):
         if self.task_place_counter == len(self.completed_task_list):
@@ -958,6 +839,7 @@ class Completed_Window(pyglet.window.Window):
                 else:
                     pass
 
+
 #This clears all tasks so a new "page" of tasks can be drawn (back/forward)
     def delete_drawn_tasks(self):
         self.x_offset = 25
@@ -971,6 +853,8 @@ class Completed_Window(pyglet.window.Window):
             for task in item:
                 task.delete()
         self.delete_list = []
+
+
     def draw_task(self,item):
         self.task_name_intro = pyglet.text.Label(
                                     'Name: ',
@@ -1030,9 +914,9 @@ class Completed_Window(pyglet.window.Window):
                                     self.main_batch,
                                     self.foreground
                                     )
-        #This prevents flashing carets from appearing while scrolling
-        #back/forward
 
+        # This prevents flashing carets from appearing while scrolling
+        # back/forward
         self.task_description.caret.delete()
 
         self.notes = pyglet.text.Label(
@@ -1085,10 +969,12 @@ class Completed_Window(pyglet.window.Window):
             self.y_offset = self.height - 160
             self.current_row += 1
 
+
     def on_draw(self):
         pyglet.gl.glClearColor(1, 1, 1, 1)
         self.clear()
         self.main_batch.draw()
+
 
     def on_mouse_motion(self, x, y, dx, dy):
 
@@ -1111,8 +997,11 @@ class Completed_Window(pyglet.window.Window):
         except:
             pass
 
+
     def on_mouse_press(self, x, y, button, modifiers):
+
         if button ==  mouse.LEFT:
+
             for item in self.notes_box_list:
                 if hit_test(item["notes_box"], x, y):
                     if self.notes_window_open == True:
@@ -1121,29 +1010,202 @@ class Completed_Window(pyglet.window.Window):
                         info=retrieve_notes(item["task_name"].text)
                         x,y = self.get_location()
                         TaskDescription(info[0], x, y)
-                        self.notes_window_open = True
                         return
             try:
                 if hit_test(self.next_box, x, y):
                     if self.page_number  != 3:
-                # self.forward(
-                #         self.completed_task_list[self.page_number+1])
                         self.current_row = 0
                         self.next_page()
+
                 if hit_test(self.previous_box, x, y):
                     if self.page_number != 0:
-                        # self.back(self.completed_task_list[self.page_number-1])
                         self.current_row = 0
                         self.previous_page()
             except:
                 pass
+
+
     def on_close(self):
         main_window.completed_window_open = False
         self.close()
 
+# fix the notes layout
+class AddNotesWindow(pyglet.window.Window):
+    def __init__(self, x, y, item):
+        super().__init__(470, 300, caption = "Task Summary")
+        self.set_location(x + 60, y + 120)
+        if handlers_on == True:
+            self.push_handlers(event_logger)
+
+        self.main_batch = pyglet.graphics.Batch()
+        self.background = pyglet.graphics.OrderedGroup(0)
+        self.foreground = pyglet.graphics.OrderedGroup(1)
+        self.item = item
+
+        label_text = "Add notes about the completed task?"
+        self.greeting_label = pyglet.text.Label(label_text,
+                        x=90, y=self.height-30, bold=True,
+                        multiline=True, width=350, color=BLACK,
+                        batch=self.main_batch)
+        icon_x = self.width//2-20
+
+        main_window.notes_window_open = False
+        # 'Canvas not attached' bug fix \Lib\site-packages\pyglet\gl\base.py
+        # lines 306 and 328 were changed.  now has a self.is_ok var
+        if self.context.is_ok == 0:
+            main_window.notes_window_open = False
+            self.close()
+
+        self.set_visible()
+        self.add_task_btn = pyglet.shapes.Rectangle(
+                                            x=icon_x,
+                                            y=self.height-90,
+                                            width=ADD_ICON_SIZE,
+                                            height=ADD_ICON_SIZE,
+                                            color=ICON_BOX_COLOR,
+                                            batch = self.main_batch,
+                                            group = self.background)
+
+        self.add_task = pyglet.text.Label(
+                                    '+',
+                                    x=icon_x+12,
+                                    y=self.height-81,
+                                    bold=True,
+                                    color=BLACK,
+                                    font_size=20,
+                                    batch = self.main_batch,
+                                    group = self.foreground)
+
+        self.add_note = TextWidget(
+                                    "Add Note",
+                                    134,
+                                    82,
+                                    200,
+                                    self.main_batch,
+                                    self.foreground,
+                                    height=30)
+
+        self.add_note_box = pyglet.shapes.Rectangle(
+                                      130,
+                                      75,
+                                      width = 220,
+                                      height = 100,
+                                      color = GREY_3,
+                                      batch=self.main_batch,
+                                      group = self.background
+                                      )
+        self.text_cursor = self.get_system_mouse_cursor('text')
+        self.focus = None
+        self.set_focus(self.add_note)
+
+
+    def on_draw(self):
+        pyglet.gl.glClearColor(1, 1, 1, 1)
+        self.clear()
+        self.main_batch.draw()
+
+
+    def on_mouse_press(self, x, y, button, modifiers):
+
+        if button == mouse.LEFT:
+            if hit_test(self.add_task_btn, x, y):
+
+                title = self.item['task_label'].text
+                description = retrieve_description(title)[0]
+                # time = 0
+                time = retrieve_task_info(title)[-1]
+                on_time = 1
+                notes = self.add_note.document.text
+                add_completed_task(
+                                title,
+                                description,
+                                time,
+                                on_time,
+                                notes)
+
+                description = add_break_lines(description)
+                notes       = add_break_lines(notes)
+                with open('records.txt', 'a') as file:
+                    _ = "Task Name: "+title+"\n"+"Description: "+ \
+                    description+"\n"+"Estimated Time to Complete: "+\
+                    str(time)+"\n"+"Was the Task Ontime? "+str(on_time)+\
+                    "\n"+"Notes: "+notes+"\n\n"
+
+                    file.write(_)
+
+                remove_task(self.item)
+                self.close()
+
+
+    def on_mouse_motion(self, x,y,dx,dy):
+        #Change "+" button color on hover
+        if hit_test(self.add_task_btn, x, y):
+                self.add_task_btn.color = ICON_BOX_COLOR_HOVER
+        else:
+                self.add_task_btn.color = ICON_BOX_COLOR
+
+        if hit_test(self.add_note_box, x, y):
+            self.set_mouse_cursor(self.text_cursor)
+        else:
+            self.set_mouse_cursor(None)
+
+
+    def on_key_press(self, symbol, modifiers):
+
+        if symbol == pyglet.window.key.ENTER:
+            pass
+
+        #Switch from name box to description box
+        if symbol == pyglet.window.key.TAB:
+            if self.focus == self.tab_group[0]:
+                self.set_focus(self.tab_group[1])
+
+            elif self.focus == self.tab_group[1]:
+                self.set_focus(self.tab_group[2])
+
+            else:
+                self.set_focus(self.tab_group[0])
+
+        if symbol == pyglet.window.key.ESCAPE:
+            pyglet.app.exit()
+
+
+    def on_text(self, text):
+        if self.focus:
+            self.focus.caret.on_text(text)
+
+
+    def on_text_motion(self, motion):
+        if self.focus:
+            self.focus.caret.on_text_motion(motion)
+
+
+    def on_text_motion_select(self, motion):
+        if self.focus:
+            self.focus.caret.on_text_motion_select(motion)
+
+        elif symbol == pyglet.window.key.ESCAPE:
+            pyglet.app.exit()
+
+
+    def set_focus(self, focus):
+        if self.focus:
+            self.focus.caret.visible = False
+            self.focus.caret.mark = self.focus.caret.position = 0
+
+        self.focus = focus
+        if self.focus:
+            self.focus.caret.visible = True
+            self.focus.caret.mark = 0
+            self.focus.caret.position = len(self.focus.document.text)
+
+
 class TaskDescription(pyglet.window.Window):
     def __init__(self,task_description,x,y, caption = "Description"):
         super().__init__(300,200, caption = caption, visible=False)
+
+
+
         self.set_location(x+60,y+120)
         if handlers_on == True:
             self.push_handlers(event_logger)
@@ -1151,10 +1213,20 @@ class TaskDescription(pyglet.window.Window):
         if len(task_description) > 45:
             self.width = 500
             self.height = 400
-        self.set_visible()
         self.greeting_label = pyglet.text.Label(self.task_description,
                         x=18, y=self.height-30, bold=True,
                         multiline = True, width = 270, color=BLACK)
+        self.xyz = 0
+
+        main_window.completed_win.notes_window_open = True
+        # 'Canvas not attached' bug fix \Lib\site-packages\pyglet\gl\base.py
+        # lines 306 and 328 were changed.  now has a self.is_ok var
+        if self.context.is_ok == 0:
+            main_window.completed_win.notes_window_open = False
+            self.close()
+
+        self.set_visible()
+
 
     def on_draw(self):
         pyglet.gl.glClearColor(1, 1, 1, 1)
@@ -1164,10 +1236,14 @@ class TaskDescription(pyglet.window.Window):
     #This ensures when a task button is pressed only one window can open
     def on_close(self):
         main_window.description_window_open = False
-        main_window.completed_win.notes_window_open = False
+        try:
+            main_window.completed_win.notes_window_open = False
+        except:
+            pass
         self.close()
 
-######  ^^^^^End of window classes^^^^^ ######
+########### End of Window Classes^ ###########
+##############################################
 
 class TextWidget(object):
     def __init__(self, text, x, y, width, main_batch ,
@@ -1197,10 +1273,6 @@ class TextWidget(object):
 
         self.layout.x = x
         self.layout.y = y
-
-
-def send_to_main_window(task_name, timer):
-    main_window.render_new_task(task_name, timer)
 
 
 def hit_test(obj, x, y):
@@ -1235,6 +1307,7 @@ def countdown(dt, item, item_index):
         item["task_time"].text = str(TIMER)
         update_timer(TIMER, item["task_label"].text)
 
+
 def display_project_time(dt):
 
     #Keeps track of total time programming still even if db is deleted
@@ -1253,6 +1326,7 @@ def add_break_lines(item):
             _ += 62
     return item
 
+
 def organize_completed_tab(info):
     rslts = []
     x=0
@@ -1263,6 +1337,7 @@ def organize_completed_tab(info):
     else:
         rslts.append(info)
     return rslts
+
 
 create_database()
 main_window = Home_Window(WNDW_WIDTH,WNDW_HEIGHT,"TaskTrack")
