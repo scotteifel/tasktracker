@@ -1,10 +1,8 @@
-
-
 import pyglet
 import time
 import threading
 from pyglet.window import mouse, key
-from create_db import create_database
+from create_db import db_startup
 from db_functions import *
 from constants import *
 
@@ -42,7 +40,9 @@ class Home_Window(pyglet.window.Window):
         self.completed_window_open = False
         self.notes_window_open = False
 
+        self.rndrd_task_count = 0
         self.task_item = 0
+        self.confirm = False
         #Enables hovering of ! box to return to grey after the mouse is moved
         #off if that's the color it started as
         self.orig_check_box_color = GREY_3
@@ -51,9 +51,7 @@ class Home_Window(pyglet.window.Window):
         self.main_batch = pyglet.graphics.Batch()
         self.background = pyglet.graphics.OrderedGroup(0)
         self.foreground = pyglet.graphics.OrderedGroup(1)
-
-        # self.new = pyglet.text.layout.ScrollableTextLayout("hey", 30,30,
-        # batch=self.main_batch)
+        self.retrieve_saved_tasks()
 
         self.greeting_label = pyglet.text.Label(
                                             GREETING_TEXT,
@@ -101,7 +99,7 @@ class Home_Window(pyglet.window.Window):
                                     batch = self.main_batch,
                                     group = self.foreground)
 
-        self.completed_tab_box = pyglet.shapes.Rectangle(
+        self.completed_tab_btn = pyglet.shapes.Rectangle(
                                             x=WNDW_WIDTH-175,
                                             y=WNDW_HEIGHT-118,
                                             width=120,
@@ -120,6 +118,25 @@ class Home_Window(pyglet.window.Window):
                                     batch = self.main_batch,
                                     group = self.foreground)
 
+        self.end_project = pyglet.text.Label(
+                                    'Finish Project',
+                                    x=WNDW_WIDTH-159,
+                                    y=5,
+                                    bold=True,
+                                    color=BLACK,
+                                    font_size=16,
+                                    batch = self.main_batch,
+                                    group = self.foreground)
+        self.end_project_btn = pyglet.shapes.Rectangle(
+                                            x=WNDW_WIDTH-165,
+                                            y=3,
+                                            width=160,
+                                            height=27,
+                                            color=DODGER_BLUE_3,
+                                            batch = self.main_batch,
+                                            group = self.background)
+
+
 
     def on_draw(self):
         pyglet.gl.glClearColor(1, 1, 1, 1)
@@ -134,11 +151,29 @@ class Home_Window(pyglet.window.Window):
         else:
                 self.add_task_btn.color = ICON_BOX_COLOR
 
-        if hit_test(self.completed_tab_box, x, y):
+        if hit_test(self.completed_tab_btn, x, y):
 
-            self.completed_tab_box.color = ICON_BOX_COLOR_HOVER
+            self.completed_tab_btn.color = ICON_BOX_COLOR_HOVER
         else:
-            self.completed_tab_box.color = (252,194,0)
+            self.completed_tab_btn.color = (252,194,0)
+
+        if hit_test(self.end_project_btn, x, y):
+            self.end_project_btn.color = RED_3
+        else:
+            self.end_project_btn.color = DODGER_BLUE_3
+
+        try:
+            if hit_test(self.yes_btn, x, y):
+                self.yes_btn.color = LIGHTSABER_GREEN_3
+            else:
+                self.yes_btn.color = DODGER_BLUE_3
+
+            if hit_test(self.no_btn, x, y):
+                self.no_btn.color = RED_3
+            else:
+                self.no_btn.color = DODGER_BLUE_3
+        except:
+            pass
 
         if self.task_list:
             for item in self.task_list:
@@ -177,19 +212,44 @@ class Home_Window(pyglet.window.Window):
     def on_mouse_press(self, x, y, button, modifiers):
         if button == mouse.LEFT:
             if hit_test(self.add_task_btn, x, y):
-                AddTaskWindow(
-                              WNDW_WIDTH//2,
-                              WNDW_HEIGHT//2,
-                              timer_amount = 0,
-                              task_text = 'Enter Task Name',
-                              task_description = 'Enter task description')
-            elif hit_test(self.completed_tab_box, x, y):
+                if self.rndrd_task_count == 10:
+                    return
+                else:
+                    AddTaskWindow(
+                                  WNDW_WIDTH//2,
+                                  WNDW_HEIGHT//2,
+                                  timer_amount = 0,
+                                  task_text = 'Enter Task Name',
+                                  task_description = 'Enter task description')
+
+            elif hit_test(self.completed_tab_btn, x, y):
                 if self.completed_window_open == True:
                     return
 
                 elif retrieve_completions():
                     self.completed_win = Completed_Window(430,700,
                                 "Completed Tasks",visible=False)
+
+            elif hit_test(self.end_project_btn, x, y):
+                try:
+                    if self.finish_prompt.document.text == '':
+                        self.confirm_end()
+                    else:
+                        return
+                except:
+                    self.confirm_end()
+
+            try:
+                if hit_test(self.yes_btn, x, y):
+                    if self.confirm == True:
+                        self.final_confirmation()
+                    else:
+                        self.yes_confirm()
+                elif hit_test(self.no_btn, x, y):
+                    self.no_confirm()
+            except:
+                pass
+
 
             if self.task_list:
                 #item_index used to match db result with self.task_list place
@@ -202,8 +262,9 @@ class Home_Window(pyglet.window.Window):
                         else:
                             info=retrieve_description(item["task_label"].text)
                             x,y = self.get_location()
-                            self.description_window_open = TaskDescription(
-                               info[0], x, y, caption = "Notes")
+                            self.description_window_open = True
+                            InfoWindow(info[0], x, y,
+                                            caption = 'Description')
                             return
 
                     elif hit_test(item["start_timer_box"], x, y):
@@ -236,7 +297,8 @@ class Home_Window(pyglet.window.Window):
                         return
 
                     elif hit_test(item["delete_x_box"], x, y):
-
+                        #Resetting rendered task list for a fresh count
+                        self.rndrd_task_count = 0
                         remove_task(item)
                         return
 
@@ -278,13 +340,97 @@ class Home_Window(pyglet.window.Window):
                               task_text = info[0],
                               task_description = info[1])
 
+    def confirm_end(self):
+
+        prompt = 'Save the completions tab to the desktop \
+and start a new project?'
+        self.finish_prompt = TextWidget(
+                       prompt,
+                       WNDW_WIDTH-163,
+                       30,
+                       160,
+                       self.main_batch,
+                       self.foreground,
+                       )
+        self.finish_prompt.document.set_style(0,30, dict(font_size=11))
+        self.finish_prompt.caret.visible = False
+
+        self.yes = pyglet.text.Label(
+                                    'Yes',
+                                    x=WNDW_WIDTH-155,
+                                    y=85,
+                                    bold=True,
+                                    color=BLACK,
+                                    font_size=13,
+                                    batch = self.main_batch,
+                                    group = self.foreground)
+
+        self.yes_btn = pyglet.shapes.Rectangle(
+                                        x=WNDW_WIDTH-160,
+                                        y=83,
+                                        width=50,
+                                        height=20,
+                                        color=DODGER_BLUE_3,
+                                        batch = self.main_batch,
+                                        group = self.background)
+
+
+        self.no = pyglet.text.Label(
+                                    'No',
+                                    x=WNDW_WIDTH-65,
+                                    y=85,
+                                    bold=True,
+                                    color=BLACK,
+                                    font_size=11,
+                                    batch = self.main_batch,
+                                    group = self.foreground)
+
+        self.no_btn = pyglet.shapes.Rectangle(
+                                            x=WNDW_WIDTH-70,
+                                            y=83,
+                                            width=50,
+                                            height=20,
+                                            color=DODGER_BLUE_3,
+                                            batch = self.main_batch,
+                                            group = self.background)
+
+    def yes_confirm(self):
+        #Give the user one more opportunity to continue their project.
+        self.confirm = True
+        self.finish_prompt.caret.delete()
+        self.finish_prompt.document.text = "Are you sure you want to \
+end this current project?"
+
+
+    def no_confirm(self):
+        self.confirm = False
+        self.yes_btn.delete()
+        self.yes.delete()
+        self.no_btn.delete()
+        self.no.delete()
+        self.finish_prompt.document.text = ''
+        self.finish_prompt.caret.delete()
+
+
+    def final_confirmation(self):
+        print("final confirmation")
+        pass
+
 
     def render_new_task(self, task, timer):
-
+        self.rndrd_task_count += 1
         #Makes the selection box taller to fit in a longer name if nessecary
+
         if len(task) > 15:
-            task_label_y = self.task_grid_y + 24
+            #Checks if a task is the first on a new line and lowers it if so.
+            if self.task_grid_y == int(self.height-210):
+                self.task_grid_y -= 20
+                task_label_y = self.task_grid_y + 24
+
+            else:
+                task_label_y = self.task_grid_y + 24
             task_label_box_height = 43
+
         else:
             task_label_y = self.task_grid_y + 5
             task_label_box_height = 23
@@ -440,6 +586,7 @@ class AddTaskWindow(pyglet.window.Window):
         self.main_batch = pyglet.graphics.Batch()
         self.background = pyglet.graphics.OrderedGroup(0)
         self.foreground = pyglet.graphics.OrderedGroup(1)
+        self.crnt_task = kwargs["task_text"]
 
         self.greeting_label = pyglet.text.Label(
                                             "Enter task information",
@@ -496,7 +643,7 @@ class AddTaskWindow(pyglet.window.Window):
                                       group = self.background)
 
         self.task = TextWidget(
-                       kwargs["task_text"],
+                       self.crnt_task,
                        self.width//2-45,
                        self.height-250,
                        90,
@@ -564,11 +711,14 @@ class AddTaskWindow(pyglet.window.Window):
             db_check = new_task_info(self.task.document.text,
                          self.task_description.document.text,
                          self.timer.document.text)
+            print("db check is", db_check)
             if db_check == True:
                 main_window.retrieve_saved_tasks()
 
             else:
-                main_window.render_new_task(task_name, timer)
+                main_window.render_new_task(self.task.document.text,
+                                            self.timer.document.text)
+
                 retrieve_tasks()
 
             main_window.add_task_window_open = False
@@ -616,9 +766,12 @@ class AddTaskWindow(pyglet.window.Window):
             if check_completed_names(self.task.document.text) == False:
                 ##It equals 0 if no tasks have been added yet
                 if len(main_window.task_list) != 0:
-
+                    #Make sure the name isn't already being used by a waiting
+                    #task
                     for item in main_window.task_list:
-                        if item["task_label"].text == self.task.document.text:
+                        if item["task_label"].text == \
+                        self.task.document.text and \
+                        self.crnt_task != item["task_label"].text:
                             self.invalid_entry_label()
                             return
                     else:
@@ -706,7 +859,6 @@ class Completed_Window(pyglet.window.Window):
 
         if handlers_on == True:
             self.push_handlers(event_logger)
-        print("Down under event logger")
 
         self.main_batch = pyglet.graphics.Batch()
         self.background = pyglet.graphics.OrderedGroup(0)
@@ -1009,7 +1161,7 @@ class Completed_Window(pyglet.window.Window):
                     else:
                         info=retrieve_notes(item["task_name"].text)
                         x,y = self.get_location()
-                        TaskDescription(info[0], x, y)
+                        InfoWindow(info[0], x, y, caption = 'Notes')
                         return
             try:
                 if hit_test(self.next_box, x, y):
@@ -1200,10 +1352,10 @@ class AddNotesWindow(pyglet.window.Window):
             self.focus.caret.position = len(self.focus.document.text)
 
 
-class TaskDescription(pyglet.window.Window):
-    def __init__(self,task_description,x,y, caption = "Description"):
+class InfoWindow(pyglet.window.Window):
+    def __init__(self,task_description,x,y, caption = "Description",
+                  ):
         super().__init__(300,200, caption = caption, visible=False)
-
 
 
         self.set_location(x+60,y+120)
@@ -1217,13 +1369,19 @@ class TaskDescription(pyglet.window.Window):
                         x=18, y=self.height-30, bold=True,
                         multiline = True, width = 270, color=BLACK)
         self.xyz = 0
-
-        main_window.completed_win.notes_window_open = True
-        # 'Canvas not attached' bug fix \Lib\site-packages\pyglet\gl\base.py
-        # lines 306 and 328 were changed.  now has a self.is_ok var
+        #
+        if caption == "Description":
+            main_window.description_window_open = True
+        else:
+            main_window.completed_win.notes_window_open = True
+            #Canvas not attached' bug fix \Lib\site-packages\pyglet\gl\base.py
+            #lines 306 and 328 were changed.  now has a self.is_ok var
         if self.context.is_ok == 0:
-            main_window.completed_win.notes_window_open = False
-            self.close()
+            if caption == "Description":
+                main_window.completed_win.notes_window_open = False
+                self.close()
+            else:
+                main_window.description_window_open = False
 
         self.set_visible()
 
@@ -1236,10 +1394,6 @@ class TaskDescription(pyglet.window.Window):
     #This ensures when a task button is pressed only one window can open
     def on_close(self):
         main_window.description_window_open = False
-        try:
-            main_window.completed_win.notes_window_open = False
-        except:
-            pass
         self.close()
 
 ########### End of Window Classes^ ###########
@@ -1338,8 +1492,8 @@ def organize_completed_tab(info):
         rslts.append(info)
     return rslts
 
-
-create_database()
-main_window = Home_Window(WNDW_WIDTH,WNDW_HEIGHT,"TaskTrack")
-main_window.retrieve_saved_tasks()
-pyglet.app.run()
+if __name__ == '__main__':
+    db_startup()
+    main_window = Home_Window(WNDW_WIDTH,WNDW_HEIGHT,"TaskTrack")
+    # main_window.retrieve_saved_tasks()
+    pyglet.app.run()
