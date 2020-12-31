@@ -3,6 +3,17 @@ from win32api import GetSystemMetrics
 S_WIDTH = GetSystemMetrics(0)
 S_HEIGHT = GetSystemMetrics(1)
 
+global description_window_open
+global add_task_window_open
+global completed_window_open
+global notes_window_open
+
+description_window_open = False
+add_task_window_open = False
+completed_window_open = False
+notes_window_open = False
+
+
 def window_placer():
 
     width = S_WIDTH//2
@@ -52,10 +63,3 @@ TASK_BX_WIDTH = 100
 ##The 'Add Task' button size and screen location information
 ADD_ICON_SIZE = 40
 ADD_ICON_COORDS = [WNDW_WIDTH//2-(ADD_ICON_SIZE//2),WNDW_HEIGHT-120]
-
-GREETING_TEXT = 'Welcome to tasktrack.  To add a new task, press the plus \
-sign.'
-
-
-        # self.task_boxes.append(EnterIcon('new thing',
-        #                         190,190,70,100,GREY,BLACK_3,self.batch))

@@ -1,5 +1,27 @@
-import sqlite3
+import sqlite3, os
 
+
+
+def save_project_name(name):
+    conn = sqlite3.connect('main.db')
+    cur = conn.cursor()
+    cur.execute('''CREATE TABLE IF NOT EXISTS project_name (name TEXT)''')
+    conn.commit()
+    cur.execute('''INSERT INTO project_name (name) VALUES(?)''', (name,))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+def get_project_name():
+    print("running project name")
+    conn = sqlite3.connect('main.db')
+    cur = conn.cursor()
+    qry = cur.execute('''SELECT name FROM project_name''')
+    item = qry.fetchone()[0]
+    cur.close()
+    conn.close()
+
+    return item
 
 def new_task_info(name,blurb,count):
 
@@ -8,8 +30,9 @@ def new_task_info(name,blurb,count):
     cur = conn.cursor()
 
     cur.execute('''CREATE TABLE IF NOT EXISTS tasks (title TEXT,
-    description TEXT, time INTEGER, estimated_time INTEGER)''')
-    conn.commit()
+    description TEXT, time INTEGER, project_name TEXT)''')
+
+    #If a user is modifying an existing task this try statement will be used
     try:
         qry =cur.execute('''SELECT * FROM tasks WHERE title = (?)''',(name,))
         info = qry.fetchone()[0]
@@ -20,13 +43,18 @@ def new_task_info(name,blurb,count):
         conn.close()
         return True
     except:
-        cur.execute('''INSERT INTO tasks (title, description, time,
-                  estimated_time) VALUES(?,?,?,?)''',(name,blurb,count,count))
+        cur.execute('''INSERT INTO tasks (title, description, time)
+                       VALUES(?,?,?)''',(name,blurb,count))
         conn.commit()
         cur.close()
         conn.close()
         return False
 
+
+def start_new_project():
+
+    os.remove('main.db')
+    print("database removed")
 
 def check_completed_names(text):
     conn = sqlite3.connect('main.db')
@@ -49,16 +77,16 @@ def check_completed_names(text):
     return result
 
 
-def add_completed_task(title, description, time, on_time, notes):
+def add_completed_task(title, description, time, notes):
     conn = sqlite3.connect("main.db")
     cur = conn.cursor()
 
     cur.execute('''CREATE TABLE IF NOT EXISTS completions (title TEXT,
-        description TEXT, time INTEGER, on_time INTEGER, notes TEXT)''')
+        description TEXT, time INTEGER, notes TEXT)''')
 
     qry = cur.execute('''INSERT INTO completions (title, description,
-        time, on_time, notes) VALUES (?,?,?,?,?)''',
-        (title, description, time, on_time, notes))
+        time, notes) VALUES (?,?,?,?)''',
+        (title, description, time, notes))
 
     conn.commit()
     cur.close()

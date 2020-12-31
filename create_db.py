@@ -1,13 +1,19 @@
 import sqlite3, os
 
+
+
+
 def db_startup():
 
     try:
-        test = open("main.db")
-    except:
-        create_database()
-        print("not there")
+        with open('main.db') as file:
+            print("yes it exists")
+        return True
 
+    except IOError:
+        print("File does not exist")
+        create_database()
+        return False
 
 def create_database():
         path = os.path.abspath("tasktrack")
