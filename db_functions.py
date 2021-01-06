@@ -13,7 +13,6 @@ def save_project_name(name):
     conn.close()
 
 def get_project_name():
-    print("running project name")
     conn = sqlite3.connect('main.db')
     cur = conn.cursor()
     qry = cur.execute('''SELECT name FROM project_name''')
@@ -186,6 +185,18 @@ def retrieve_description(title):
     except:
         pass
 
+
+    cur.close()
+    conn.close()
+    return info
+
+
+def retrieve_initial_time(title):
+    conn = sqlite3.connect('main.db')
+    cur = conn.cursor()
+    qry=cur.execute('''SELECT time FROM tasks WHERE title = (?)''',
+                    (title,))
+    info = qry.fetchone()
 
     cur.close()
     conn.close()

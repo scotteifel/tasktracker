@@ -5,13 +5,17 @@ import sqlite3, os
 
 def db_startup():
 
+    #Check to see if the projectname table was created or not
     try:
         with open('main.db') as file:
-            print("yes it exists")
+            conn = sqlite3.connect('main.db')
+            cur = conn.cursor()
+            cur.execute('''SELECT * FROM project_name''')
+            cur.close()
+            conn.close()
         return True
 
-    except IOError:
-        print("File does not exist")
+    except:
         create_database()
         return False
 
