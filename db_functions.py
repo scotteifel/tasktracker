@@ -126,10 +126,14 @@ def update_timer(new_time, task):
 
     conn = sqlite3.connect('main.db')
     cur = conn.cursor()
-
+    qry = cur.execute('''SELECT time FROM tasks WHERE title = (?)''',
+                        (task,))
     qry = cur.execute('''UPDATE tasks SET time = (?) WHERE title = (?)''',
-    (new_time, task))
+                        (new_time,task))
     conn.commit()
+
+    qry = cur.execute('''SELECT time FROM tasks WHERE title = (?)''',
+                        (task,))
 
     cur.close()
     conn.close()

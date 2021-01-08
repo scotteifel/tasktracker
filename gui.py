@@ -309,8 +309,8 @@ plus sign.',
                             TIMER = int(item["task_time"].text)
                             if TIMER == 0:
                                 return
-
-                            item["task_time"].text = str(TIMER-1)
+                            TIMER -= 1
+                            item["task_time"].text = str(TIMER)
                             item["task_time_box"].color=LIGHTSABER_GREEN_3
                             pyglet.clock.schedule_interval(
                                                             countdown,
@@ -319,6 +319,10 @@ plus sign.',
                                                             item_index)
                             item["start"].text = "Stop"
                             return
+                        else:
+                            item["start"].text = "Start"
+                            pyglet.clock.unschedule(countdown)
+                            item["task_time_box"].color = GREY_3
 
                     elif hit_test(item["edit_box"], x, y):
                         if add_task_window_open == True:
@@ -725,7 +729,6 @@ class AddTaskWindow(pyglet.window.Window):
             add_task_window_open = False
             self.close()
         self.set_visible()
-
 
     def invalid_entry_label(self):
 
@@ -1428,12 +1431,14 @@ class EnterProjectName(pyglet.window.Window):
 
         self.add_name = TextWidget(
                                     "New Project Name",
-                                    134,
-                                    73,
+                                    139,
+                                    70,
                                     200,
                                     self.main_batch,
                                     self.foreground,
                                     height=15)
+
+        self.add_name.layout.multiline = False
 
         self.add_name_box = pyglet.shapes.Rectangle(
                                       130,
@@ -1479,16 +1484,11 @@ class EnterProjectName(pyglet.window.Window):
             self.set_mouse_cursor(None)
 
 
-    def on_key_press(self, symbol, modifiers):
-
-        if symbol == pyglet.window.key.ENTER:
-            pass
-
-
     def on_text(self, text):
         if self.focus:
             if len(self.add_name.document.text) > 22:
                 return
+
             else:
                 self.focus.caret.on_text(text)
 
@@ -1554,7 +1554,6 @@ class InfoWindow(pyglet.window.Window):
                 notes_window_open = False
                 self.close()
 
-
         self.set_visible()
 
 
@@ -1566,10 +1565,7 @@ class InfoWindow(pyglet.window.Window):
     #This ensures when a task button is pressed only one window can open
     def on_close(self):
         global description_window_open
-        print('closing')
         description_window_open = False
-        print('closed')
-        print(description_window_open, ' hereee')
         self.close()
 
 ########### End of Window Classes^ ###########
@@ -1635,8 +1631,9 @@ def countdown(dt, item, item_index):
         TIMER -= 1
         item["task_time"].text = ""
         item["task_time"].text = str(TIMER)
-        update_timer(TIMER, item['task_time'].text)
+        update_timer(TIMER, item['task_label'].text)
 
+# check the updatetimer function
 
 def display_project_time(dt):
 
