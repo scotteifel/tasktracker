@@ -448,9 +448,7 @@ end this current project?"
 
     def final_confirmation(self):
         start_new_project()
-        print("final confirmation")
         save_to_desktop(self.title)
-        print('here')
         self.close()
 
 
@@ -1626,12 +1624,15 @@ def countdown(dt, item, item_index):
     if TIMER == 0:
         pyglet.clock.unschedule(countdown)
         item['check_box'].color = LIGHTSABER_GREEN_3
+        item['task_time_box'].color = GREY_3
+        item['start'].text = 'Start'
 
     else:
         TIMER -= 1
         item["task_time"].text = ""
         item["task_time"].text = str(TIMER)
-        update_timer(TIMER, item['task_label'].text)
+
+    update_timer(TIMER, item['task_label'].text)
 
 # check the updatetimer function
 
@@ -1662,9 +1663,9 @@ def add_break_lines(item):
 
 def display_hours(x):
     x = int(x)
-    hrs = str(x//60)
-    mins = str(int(math.remainder(x,60)))
-    return hrs + ' hr ' + mins +' min'
+    hrs = x//60
+    mins = x - hrs*60
+    return str(hrs) + ' hr ' + str(mins) +' min'
 
 
 def save_to_desktop(title):
