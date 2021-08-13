@@ -1,3 +1,4 @@
+from matplotlib.pyplot import loglog
 import pyglet, time, threading, os, math
 from pyglet.window import mouse, key
 from create_db import db_startup
@@ -42,8 +43,8 @@ class Home_Window(pyglet.window.Window):
         self.rndrd_task_count = 0
         self.task_item = 0
         self.confirm = False
-        #Enables hovering of ! box to return to grey after the mouse is moved
-        #off if that's the color it started as
+
+        ### Enables hovering of ! box to return to original color
         self.orig_check_box_color = GREY_3
 
         self.focus = None
@@ -58,7 +59,8 @@ class Home_Window(pyglet.window.Window):
                                             y=WNDW_HEIGHT-40,
                                             anchor_x='center',
                                             bold=True,
-                                            color=(226,58,24,255),
+                                            # color=(226,58,24,255),
+                                            color=(111, 0, 0,255),
                                             font_size=16,
                                             batch = self.main_batch,
                                             group = self.foreground)
@@ -203,7 +205,8 @@ plus sign.',
         if self.task_list:
             for item in self.task_list:
                 if hit_test(item["task_label_box"], x, y):
-                    item["task_label_box"].color = GREEN_HOVER
+                    # item["task_label_box"].color = GREEN_HOVER
+                    item["task_label_box"].color = (26, 60, 79)
                 else:
                     item["task_label_box"].color = TASK_BTN_COLOR
 
@@ -283,7 +286,6 @@ plus sign.',
                 for item in self.task_list:
 
                     if hit_test(item["task_label_box"], x, y):
-                        print(description_window_open)
 
                         if description_window_open == True:
                             return
@@ -325,6 +327,8 @@ plus sign.',
                             item["task_time_box"].color = GREY_3
 
                     elif hit_test(item["edit_box"], x, y):
+                        print('hit')
+
                         if add_task_window_open == True:
                             return
                         self.edit_task(item["task_label"].text)
@@ -477,7 +481,8 @@ end this current project?"
                                      width = 150,
                                      multiline = True,
                                      bold=True,
-                                     color=BLACK,
+                                    #  color=BLACK,
+                                     color=(173, 181, 189, 255),
                                      batch=self.main_batch,
                                      group=self.foreground)
 
@@ -613,7 +618,7 @@ end this current project?"
 
 class AddTaskWindow(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
-        super().__init__(550, 450, caption='ADD TASK', visible=False)
+        super().__init__(550, 450, caption='Add Task', visible=False)
         self.set_location(S_WIDTH//2-160,S_HEIGHT//3-30)
         if handlers_on == True:
             self.push_handlers(event_logger)
@@ -727,6 +732,11 @@ class AddTaskWindow(pyglet.window.Window):
             add_task_window_open = False
             self.close()
         self.set_visible()
+        # if hasattr(self, 'context.is_ok'):
+        #     if self.context.is_ok == 0:
+        #         add_task_window_open = False
+        #         self.close()
+        # self.set_visible()
 
     def invalid_entry_label(self):
 
@@ -742,6 +752,7 @@ class AddTaskWindow(pyglet.window.Window):
 
 
     def add_task_to_db(self):
+            global add_task_window_open
 
             db_check = new_task_info(self.task.document.text,
                          self.task_description.document.text,
@@ -869,6 +880,7 @@ class AddTaskWindow(pyglet.window.Window):
 
 
     def on_close(self):
+        global add_task_window_open
         add_task_window_open = False
         self.close()
 
@@ -907,6 +919,10 @@ class Completed_Window(pyglet.window.Window):
         if self.context.is_ok == 0:
             completed_window_open = False
             self.close()
+        # if hasattr(self, "context.is_ok"):
+        #     if self.context.is_ok == 0:
+        #         completed_window_open = False
+        #         self.close()
 
 
         #Makes sure the notes window is only opened once
@@ -972,7 +988,8 @@ class Completed_Window(pyglet.window.Window):
                                         bold=True,
                                         multiline=True,
                                         width=280,
-                                        color=BLACK,
+                                        color=CREAM,
+                                        # color=BLACK,
                                         batch=self.main_batch)
 
 
@@ -1215,6 +1232,7 @@ class Completed_Window(pyglet.window.Window):
 
 
     def on_close(self):
+        global completed_window_open
         completed_window_open = False
         self.close()
 
@@ -1245,6 +1263,10 @@ class AddNotesWindow(pyglet.window.Window):
         if self.context.is_ok == 0:
             notes_window_open = False
             self.close()
+        # if hasattr(self, "context.is_ok"):
+        #     if self.context.is_ok == 0:
+        #         notes_window_open = False
+        #         self.close()
 
         self.set_visible()
         self.add_task_btn = pyglet.shapes.Rectangle(
@@ -1304,7 +1326,6 @@ class AddNotesWindow(pyglet.window.Window):
                 title = self.item['task_label'].text
                 description = retrieve_description(title)[0]
                 time = retrieve_initial_time(title)[0]
-                print("time is ", time)
                 notes = self.add_note.document.text
                 add_completed_task(
                                 title,
@@ -1551,6 +1572,14 @@ class InfoWindow(pyglet.window.Window):
             else:
                 notes_window_open = False
                 self.close()
+        # if hasattr(self, "context.is_ok"):
+        #     if self.context.is_ok == 0:
+        #         if caption == "Description":
+        #             description_window_open = False
+        #             self.close()
+        #         else:
+        #             notes_window_open = False
+        #             self.close()
 
         self.set_visible()
 
