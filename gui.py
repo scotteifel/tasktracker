@@ -56,12 +56,12 @@ class Home_Window(pyglet.window.Window):
         self.proj_title = pyglet.text.Label(
                                             self.title,
                                             x=WNDW_WIDTH//2,
-                                            y=WNDW_HEIGHT-40,
+                                            y=WNDW_HEIGHT-34,
                                             anchor_x='center',
                                             bold=True,
                                             # color=(226,58,24,255),
-                                            color=(111, 0, 0,255),
-                                            font_size=16,
+                                            color=PROJECT_TITLE_COLOR,
+                                            font_size=18,
                                             batch = self.main_batch,
                                             group = self.foreground)
 
@@ -71,16 +71,16 @@ plus sign.',
                                             x=150,
                                             y=WNDW_HEIGHT-60,
                                             bold=True,
-                                            color=BLACK,
+                                            color=TEXT_COLOR,
                                             batch = self.main_batch,
                                             group = self.foreground)
 
         self.project_time_count = pyglet.text.Label(
-                                                proj_time + ' min',
+                                                proj_time + ' Min',
                                                 x=120,
-                                                y=WNDW_HEIGHT-115,
+                                                y=WNDW_HEIGHT-120,
                                                 bold=True,
-                                                color=BLACK,
+                                                color=TEXT_COLOR,
                                                 batch = self.main_batch,
                                                 group = self.foreground)
 
@@ -88,9 +88,9 @@ plus sign.',
         self.project_time_label = pyglet.text.Label(
                                                 'Total Project Time',
                                                 x=50,
-                                                y=WNDW_HEIGHT-90,
+                                                y=WNDW_HEIGHT-95,
                                                 bold=True,
-                                                color=BLACK,
+                                                color=TEXT_COLOR,
                                                 batch = self.main_batch,
                                                 group = self.foreground)
 
@@ -108,7 +108,7 @@ plus sign.',
                                     x=ADD_ICON_COORDS[0]+12,
                                     y=ADD_ICON_COORDS[1]+10,
                                     bold=True,
-                                    color=BLACK,
+                                    color=TEXT_COLOR,
                                     font_size=20,
                                     batch = self.main_batch,
                                     group = self.foreground)
@@ -118,7 +118,7 @@ plus sign.',
                                             y=WNDW_HEIGHT-118,
                                             width=120,
                                             height=27,
-                                            color=ORANGE_3,
+                                            color=COMPLETED_BG_COLOR,
                                             batch = self.main_batch,
                                             group = self.background)
 
@@ -127,7 +127,7 @@ plus sign.',
                                     x=WNDW_WIDTH-170,
                                     y=WNDW_HEIGHT-115,
                                     bold=True,
-                                    color=BLACK,
+                                    color=TEXT_COLOR,
                                     font_size=16,
                                     batch = self.main_batch,
                                     group = self.foreground)
@@ -137,7 +137,7 @@ plus sign.',
                                     x=WNDW_WIDTH-160,
                                     y=8,
                                     bold=True,
-                                    color=BLACK,
+                                    color=TEXT_COLOR,
                                     font_size=16,
                                     batch = self.main_batch,
                                     group = self.foreground)
@@ -147,7 +147,7 @@ plus sign.',
                                             y=5,
                                             width=160,
                                             height=27,
-                                            color=DODGER_BLUE_3,
+                                            color=COMPLETED_BG_COLOR,
                                             batch = self.main_batch,
                                             group = self.background)
         #Check to see if the x coordinate needs to be adjusted
@@ -159,8 +159,8 @@ plus sign.',
             self.project_time_count.text = proj_time
             self.project_time_count.x = 80
 
-        # Allow the completed tab to not be highlighted on hover if there
-        # are no completed tasks yet.
+        # Completed tab won't be highlighted on hover if no
+        # completions.
         if retrieve_completions() == False:
             COMPLETED_HOVER = ORANGE_3
 
@@ -182,12 +182,12 @@ plus sign.',
 
             self.completed_tab_btn.color = COMPLETED_HOVER
         else:
-            self.completed_tab_btn.color = ORANGE_3
+            self.completed_tab_btn.color = COMPLETED_BG_COLOR
 
         if hit_test(self.end_project_btn, x, y):
-            self.end_project_btn.color = RED_HOVER
+            self.end_project_btn.color = COMPLETED_HOVER
         else:
-            self.end_project_btn.color = DODGER_BLUE_3
+            self.end_project_btn.color = COMPLETED_BG_COLOR
 
         try:
             if hit_test(self.yes_btn, x, y):
@@ -327,7 +327,6 @@ plus sign.',
                             item["task_time_box"].color = GREY_3
 
                     elif hit_test(item["edit_box"], x, y):
-                        print('hit')
 
                         if add_task_window_open == True:
                             return
@@ -398,7 +397,7 @@ project?'
                                     x=WNDW_WIDTH-155,
                                     y=85,
                                     bold=True,
-                                    color=BLACK,
+                                    color=TEXT_COLOR,
                                     font_size=13,
                                     batch = self.main_batch,
                                     group = self.foreground)
@@ -418,7 +417,7 @@ project?'
                                     x=WNDW_WIDTH-65,
                                     y=85,
                                     bold=True,
-                                    color=BLACK,
+                                    color=TEXT_COLOR,
                                     font_size=11,
                                     batch = self.main_batch,
                                     group = self.foreground)
@@ -481,8 +480,9 @@ end this current project?"
                                      width = 150,
                                      multiline = True,
                                      bold=True,
-                                    #  color=BLACK,
-                                     color=(173, 181, 189, 255),
+                                    #  color=TEXT_COLOR,
+                                    #  color=(173, 181, 189, 255),
+                                     color=TASK_LABELS_COLOR,
                                      batch=self.main_batch,
                                      group=self.foreground)
 
@@ -492,7 +492,7 @@ end this current project?"
                                      self.task_grid_y,
                                      width=150,
                                      height=task_label_box_height,
-                                     color=TASK_BTN_COLOR,
+                                     color=TASK_LABELS_BG_COLOR,
                                      batch=self.main_batch,
                                      group=self.background)
 
@@ -502,7 +502,7 @@ end this current project?"
                                      x = self.task_grid_x+27,
                                      y = self.task_grid_y-24,
                                      bold = True,
-                                     color = BLACK,
+                                     color = TEXT_COLOR,
                                      batch = self.main_batch,
                                      group = self.foreground)
 
@@ -521,7 +521,7 @@ end this current project?"
                                      x = self.task_grid_x+70,
                                      y = self.task_grid_y-24,
                                      bold=True,
-                                     color=BLACK,
+                                     color=TEXT_COLOR,
                                      batch = self.main_batch,
                                      group = self.foreground)
 
@@ -540,7 +540,7 @@ end this current project?"
                                      x = self.task_grid_x+137,
                                      y = self.task_grid_y-15,
                                      bold=True,
-                                     color=BLACK,
+                                     color=TEXT_COLOR,
                                      batch = self.main_batch,
                                      group = self.foreground)
 
@@ -558,7 +558,7 @@ end this current project?"
                                      x = self.task_grid_x+133,
                                      y = self.task_grid_y-28,
                                      bold=True,
-                                     color=BLACK,
+                                     color=TEXT_COLOR,
                                      batch = self.main_batch,
                                      group = self.foreground)
 
@@ -576,7 +576,7 @@ end this current project?"
                                      x = self.task_grid_x + 6,
                                      y = self.task_grid_y - 23,
                                      bold=True,
-                                     color=BLACK,
+                                     color=TEXT_COLOR,
                                      batch=self.main_batch,
                                      group=self.foreground)
         #Checks to see if the task still has time remaining
@@ -634,7 +634,7 @@ class AddTaskWindow(pyglet.window.Window):
                                             x = 185,
                                             y = self.height-40,
                                             bold = True,
-                                            color = BLACK,
+                                            color = TEXT_COLOR,
                                             batch = self.main_batch,
                                             group = self.foreground)
 
@@ -652,7 +652,7 @@ class AddTaskWindow(pyglet.window.Window):
                                     x = self.width//2,
                                     y = self.height-91,
                                     bold = True,
-                                    color = BLACK,
+                                    color = TEXT_COLOR,
                                     font_size = 20,
                                     batch = self.main_batch,
                                     group = self.foreground)
@@ -662,7 +662,7 @@ class AddTaskWindow(pyglet.window.Window):
                                             x = self.width//2-40,
                                             y = self.height-133,
                                             bold = True,
-                                            color = BLACK,
+                                            color = TEXT_COLOR,
                                             batch = self.main_batch,
                                             group = self.foreground)
 
@@ -745,7 +745,7 @@ class AddTaskWindow(pyglet.window.Window):
                             x = self.width - 200,
                             y = self.height - 220,
                             bold = True,
-                            color = BLACK,
+                            color = TEXT_COLOR,
                             batch = self.main_batch,
                             group = self.foreground
                             )
@@ -763,7 +763,7 @@ class AddTaskWindow(pyglet.window.Window):
             else:
                 main_window.render_new_task(self.task.document.text,
                                             self.timer.document.text)
-
+                
                 retrieve_tasks()
 
             add_task_window_open = False
@@ -948,7 +948,7 @@ class Completed_Window(pyglet.window.Window):
                                          x = self.width-110,
                                          y = self.height-40,
                                          bold=True,
-                                         color=BLACK,
+                                         color=TEXT_COLOR,
                                          batch = self.main_batch,
                                          group = self.foreground)
 
@@ -966,7 +966,7 @@ class Completed_Window(pyglet.window.Window):
                                          x = self.width - 150,
                                          y = self.height-40,
                                          bold=True,
-                                         color=BLACK,
+                                         color=TEXT_COLOR,
                                          batch = self.main_batch,
                                          group = self.foreground)
 
@@ -989,7 +989,7 @@ class Completed_Window(pyglet.window.Window):
                                         multiline=True,
                                         width=280,
                                         color=CREAM,
-                                        # color=BLACK,
+                                        # color=TEXT_COLOR,
                                         batch=self.main_batch)
 
 
@@ -1067,7 +1067,7 @@ class Completed_Window(pyglet.window.Window):
                                     x=self.x_offset+5,
                                     y=self.y_offset+40,
                                     bold=True,
-                                    color=BLACK,
+                                    color=TEXT_COLOR,
                                     batch = self.main_batch,
                                     group = self.foreground
                                     )
@@ -1077,7 +1077,7 @@ class Completed_Window(pyglet.window.Window):
                                     x=self.x_offset+120,
                                     y=self.y_offset+40,
                                     bold=True,
-                                    color=BLACK,
+                                    color=TEXT_COLOR,
                                     batch = self.main_batch,
                                     group = self.foreground
                                     )
@@ -1087,7 +1087,7 @@ class Completed_Window(pyglet.window.Window):
                                     x=self.x_offset+5,
                                     y=self.y_offset+20,
                                     bold=True,
-                                    color=BLACK,
+                                    color=TEXT_COLOR,
                                     batch = self.main_batch,
                                     group = self.foreground
                                     )
@@ -1097,7 +1097,7 @@ class Completed_Window(pyglet.window.Window):
                                     x=self.x_offset+120,
                                     y=self.y_offset+20,
                                     bold=True,
-                                    color=BLACK,
+                                    color=TEXT_COLOR,
                                     batch = self.main_batch,
                                     group = self.foreground
                                     )
@@ -1107,7 +1107,7 @@ class Completed_Window(pyglet.window.Window):
                                     x=self.x_offset+5,
                                     y=self.y_offset,
                                     bold=True,
-                                    color=BLACK,
+                                    color=TEXT_COLOR,
                                     batch = self.main_batch,
                                     group = self.foreground
                                     )
@@ -1130,7 +1130,7 @@ class Completed_Window(pyglet.window.Window):
                                     x=self.x_offset+15,
                                     y=self.y_offset-26,
                                     bold=True,
-                                    color=BLACK,
+                                    color=TEXT_COLOR,
                                     batch = self.main_batch,
                                     group = self.foreground
                                     )
@@ -1252,7 +1252,7 @@ class AddNotesWindow(pyglet.window.Window):
         label_text = "Add notes about the completed task?"
         self.greeting_label = pyglet.text.Label(label_text,
                         x=90, y=self.height-30, bold=True,
-                        multiline=True, width=350, color=BLACK,
+                        multiline=True, width=350, color=TEXT_COLOR,
                         batch=self.main_batch)
         icon_x = self.width//2-20
         global notes_window_open
@@ -1283,7 +1283,7 @@ class AddNotesWindow(pyglet.window.Window):
                                     x=icon_x+12,
                                     y=self.height-81,
                                     bold=True,
-                                    color=BLACK,
+                                    color=TEXT_COLOR,
                                     font_size=20,
                                     batch = self.main_batch,
                                     group = self.foreground)
@@ -1424,7 +1424,7 @@ class EnterProjectName(pyglet.window.Window):
         label_text = "Please enter your new project name below."
         self.greeting_label = pyglet.text.Label(label_text,
                         x=90, y=self.height-30, bold=True,
-                        multiline=True, width=350, color=BLACK,
+                        multiline=True, width=350, color=TEXT_COLOR,
                         batch=self.main_batch)
         icon_x = self.width//2-20
         self.set_visible()
@@ -1443,7 +1443,7 @@ class EnterProjectName(pyglet.window.Window):
                                     x=icon_x+12,
                                     y=self.height-81,
                                     bold=True,
-                                    color=BLACK,
+                                    color=TEXT_COLOR,
                                     font_size=20,
                                     batch = self.main_batch,
                                     group = self.foreground)
@@ -1554,7 +1554,7 @@ class InfoWindow(pyglet.window.Window):
             self.height = 400
         self.greeting_label = pyglet.text.Label(self.task_description,
                         x=18, y=self.height-30, bold=True,
-                        multiline = True, width = 270, color=BLACK)
+                        multiline = True, width = 270, color=TEXT_COLOR)
         self.xyz = 0
 
         if caption == "Description":
@@ -1694,7 +1694,7 @@ def display_hours(x):
     x = int(x)
     hrs = x//60
     mins = x - hrs*60
-    return str(hrs) + ' hr ' + str(mins) +' min'
+    return str(hrs) + ' Hr ' + str(mins) +' Min'
 
 
 def save_to_desktop(title):
