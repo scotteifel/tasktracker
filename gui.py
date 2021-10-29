@@ -1,33 +1,34 @@
-# from matplotlib.pyplot import loglog
-from AddTaskWindow import AddTaskWindow
 import pyglet
-# import time
-# import threading
-import os
-# import math
 from pyglet.window import mouse, key
+import os
+
 from create_db import db_startup
 from db_functions import *
 from constants import *
 
 global TIMER
 global handlers_on
-# EVENT LOGGER CODE
+
+
+# Enable window events logging
 event_logger = pyglet.window.event.WindowEventLogger()
-# Change to True to see the events of the different windows in the console.
+# Change to True to show events of the different windows in the console.
 handlers_on = False
 
-
+#####################################################################
 # 'Canvas not attached' bug fix \Lib\site-packages\pyglet\gl\base.py
 # lines 306 and 328 were changed.  Now has a self.is_ok var
 # Bug happened sometimes when a window opened.  Didn't allow mouse events.
-
+# is_ok attribute added which is not set to true if the canvas is not
+# attached so the window is shown to need an immediate restart
+#####################################################################
 
 ###################################################
 #
 # Home Window
 #
 ###################################################
+
 
 class Home_Window(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
@@ -118,7 +119,7 @@ class Home_Window(pyglet.window.Window):
             y=ADD_ICON_COORDS[1],
             width=ADD_ICON_SIZE,
             height=ADD_ICON_SIZE,
-            color=ICON_BOX_COLOR,
+            color=ADD_TASK_BTN_COLOR,
             batch=self.main_batch,
             group=self.background
         )
@@ -174,7 +175,7 @@ class Home_Window(pyglet.window.Window):
             y=5,
             width=160,
             height=27,
-            color=COMPLETED_BG_COLOR,
+            color=FINISH_PROJECT_BG_COLOR,
             batch=self.main_batch,
             group=self.background
         )
@@ -188,25 +189,19 @@ class Home_Window(pyglet.window.Window):
             self.project_time_count.text = proj_time
             self.project_time_count.x = 80
 
-        # Completed tab won't be highlighted on hover if no
-        # completions.
-        if retrieve_completions() == False:
-            COMPLETED_HOVER = ORANGE
-
     def on_draw(self):
         pyglet.gl.glClearColor(1, 1, 1, 1)
         self.clear()
         self.main_batch.draw()
 
     def on_mouse_motion(self, x, y, dx, dy):
-        # Change "+" button color on hover
+
         if hit_test(self.add_task_btn, x, y):
             self.add_task_btn.color = BRIGHT_GREEN_HOVER
         else:
-            self.add_task_btn.color = ICON_BOX_COLOR
+            self.add_task_btn.color = ADD_TASK_BTN_COLOR
 
         if hit_test(self.completed_tab_btn, x, y):
-
             self.completed_tab_btn.color = COMPLETED_HOVER
         else:
             self.completed_tab_btn.color = COMPLETED_BG_COLOR
@@ -214,7 +209,7 @@ class Home_Window(pyglet.window.Window):
         if hit_test(self.end_project_btn, x, y):
             self.end_project_btn.color = COMPLETED_HOVER
         else:
-            self.end_project_btn.color = COMPLETED_BG_COLOR
+            self.end_project_btn.color = FINISH_PROJECT_BG_COLOR
 
         try:
             if hit_test(self.yes_btn, x, y):
@@ -232,7 +227,7 @@ class Home_Window(pyglet.window.Window):
         if self.task_list:
             for item in self.task_list:
                 if hit_test(item["task_label_box"], x, y):
-                    # item["task_label_box"].color = BRIGHT_GREEN_HOVER
+                    # Little light blue for mouse hovering
                     item["task_label_box"].color = (26, 60, 79)
                 else:
                     item["task_label_box"].color = TASK_BTN_COLOR
@@ -269,27 +264,54 @@ class Home_Window(pyglet.window.Window):
                 if self.rndrd_task_count == 10:
                     return
                 else:
-                    AddTaskWindow(
-                        WNDW_WIDTH//2,
-                        WNDW_HEIGHT//2,
-                        timer_amount=0,
-                        task_text='Enter Task Name',
-                        task_description='Enter task description'
-                    )
+                    # Canvas not attached error check referenced at top
+                    # Auto retries opening window
+
+                    while True:
+                        try:
+                            this_window = AddTaskWindow(
+                                WNDW_WIDTH//2,
+                                WNDW_HEIGHT//2,
+                                timer_amount=0,
+                                task_text='Enter Task Name',
+                                task_description='Enter task description'
+                            )
+                            if (this_window.context.is_ok):
+                                break
+                            else:
+                                continue
+                        except:
+                            continue
 
             elif hit_test(self.completed_tab_btn, x, y):
                 if completed_window_open == True:
                     return
 
                 elif retrieve_completions():
-                    self.completed_win = Completed_Window(430, 700,
-                                                          "Completed Tasks", visible=False)
+                    # Canvas not attached error check referenced at top
+                    # Auto retries opening window
+
+                    while True:
+                        try:
+                            this_window = Completed_Window(
+                                430,
+                                700,
+                                "Completed Tasks",
+                                visible=False
+                            )
+                            if (this_window.context.is_ok):
+                                break
+                            else:
+                                continue
+                        except:
+                            continue
 
             elif hit_test(self.end_project_btn, x, y):
                 try:
                     if self.finish_prompt.document.text == '':
                         self.confirm_end()
                     else:
+                        self.no_confirm()
                         return
                 except:
                     self.confirm_end()
@@ -319,9 +341,22 @@ class Home_Window(pyglet.window.Window):
                             info = retrieve_description(
                                 item["task_label"].text)
                             x, y = self.get_location()
-                            # description_window_open = True
-                            InfoWindow(info[0], x, y,
-                                       caption='Description')
+                            # Canvas not attached error check referenced at top
+                            # Auto retries opening window
+                            while True:
+                                try:
+                                    this_window = InfoWindow(
+                                        info[0],
+                                        x,
+                                        y,
+                                        caption='Description'
+                                    )
+                                    if (this_window.context.is_ok):
+                                        break
+                                    else:
+                                        continue
+                                except:
+                                    continue
                             return
 
                     elif hit_test(item["start_timer_box"], x, y):
@@ -368,17 +403,24 @@ class Home_Window(pyglet.window.Window):
 
                     item_index += 1
 
-                    try:
-                        if hit_test(item["check_box"], x, y):
-                            x, y = self.get_location()
-                            # Add additional notes window
-                            self.notes_window = AddNotesWindow(x, y, item)
-                    except:
-                        pass
+                    if hit_test(item["check_box"], x, y):
+                        x, y = self.get_location()
+                        # Add additional notes window
+                        # Canvas not attached error check referenced at top
+                        # Auto retries opening window
+                        while True:
+                            try:
+                                this_window = self.notes_window = AddNotesWindow(
+                                    x, y, item)
+                                if (this_window.context.is_ok):
+                                    break
+                                else:
+                                    continue
+                            except:
+                                continue
 
     def retrieve_saved_tasks(self):
-        # If statement will clean up the gui screen before tasks are drawn
-        # or redrawn
+        # If statement cleans up main window before tasks are drawn/redrawn
         if len(self.task_list) != 0:
             for item in self.task_list:
                 redraw_all_tasks(item)
@@ -695,7 +737,7 @@ class AddTaskWindow(pyglet.window.Window):
         self.add_task_btn = pyglet.shapes.Rectangle(
             (self.width//2)-11,
             self.height-100,
-            color=CHRISTMAS_GREEN,
+            color=ADD_TASK_BTN_COLOR,
             width=ADD_ICON_SIZE,
             height=ADD_ICON_SIZE,
             batch=self.main_batch,
@@ -789,8 +831,7 @@ class AddTaskWindow(pyglet.window.Window):
 
         add_task_window_open = True
 
-        # Canvas not attached bug fix in \Lib\site-packages\pyglet\gl\base.py
-        # lines 306 and 328 were changed.  now has a self.is_ok var
+        # Canvas not attached bug fix referenced at top
         if self.context.is_ok == 0:
             add_task_window_open = False
             self.close()
@@ -849,7 +890,7 @@ class AddTaskWindow(pyglet.window.Window):
         if hit_test(self.add_task_btn, x, y):
             self.add_task_btn.color = BRIGHT_GREEN_HOVER
         else:
-            self.add_task_btn.color = ICON_BOX_COLOR
+            self.add_task_btn.color = ADD_TASK_BTN_COLOR
 
     def on_mouse_press(self, x, y, button, modifiers):
         if hit_test(self.task_box, x, y):
@@ -907,9 +948,6 @@ class AddTaskWindow(pyglet.window.Window):
         if self.focus:
             self.focus.caret.on_text_motion_select(motion)
 
-        elif symbol == pyglet.window.key.ESCAPE:
-            pyglet.app.exit()
-
     def on_key_press(self, symbol, modifiers):
 
         if symbol == pyglet.window.key.ENTER:
@@ -950,6 +988,7 @@ class AddTaskWindow(pyglet.window.Window):
 #################################################
 
 class Completed_Window(pyglet.window.Window):
+
     def __init__(self, *args, **kwargs):
         super(Completed_Window, self).__init__(*args, **kwargs)
 
@@ -966,14 +1005,12 @@ class Completed_Window(pyglet.window.Window):
         global completed_window_open
 
         completed_window_open = True
-        # 'Canvas not attached' bug fix \Lib\site-packages\pyglet\gl\base.py
-        # lines 306 and 328 were changed.  now has a self.is_ok var
+        # Canvas not attached bug fix referenced at top
         if self.context.is_ok == 0:
             completed_window_open = False
             self.close()
 
         # Makes sure the notes window is only opened once
-        notes_window_open = False
         self.notes_box_list = []
         self.completed_tab_list = []
         self.current_row = 0
@@ -1097,13 +1134,13 @@ class Completed_Window(pyglet.window.Window):
                     pass
 
 
-# This clears all tasks so a new "page" of tasks can be drawn (back/forward)
+# Clear all tasks so a new "page" of tasks can be drawn (back/forward)
 
 
     def delete_drawn_tasks(self):
         self.x_offset = 25
         self.y_offset = self.height - 160
-        # Erase this list so mouse motion function won't throw an error
+        # Erase list so mouse motion function won't throw an error
         self.notes_box_list = []
 
         for item in self.delete_list:
@@ -1178,7 +1215,7 @@ class Completed_Window(pyglet.window.Window):
             self.foreground
         )
 
-        # This prevents flashing carets from appearing while scrolling
+        # Prevent flashing carets from appearing while scrolling
         # back/forward
         self.task_description.caret.delete()
 
@@ -1198,7 +1235,7 @@ class Completed_Window(pyglet.window.Window):
             y=self.y_offset-29,
             width=50,
             height=20,
-            color=ORANGE,
+            color=BLUE,
             batch=self.main_batch,
             group=self.background
         )
@@ -1248,7 +1285,7 @@ class Completed_Window(pyglet.window.Window):
             if hit_test(item["notes_box"], x, y):
                 item["notes_box"].color = BRIGHT_GREEN_HOVER
             else:
-                item["notes_box"].color = ORANGE
+                item["notes_box"].color = BLUE
         try:
 
             if hit_test(self.next_box, x, y):
@@ -1302,6 +1339,7 @@ class Completed_Window(pyglet.window.Window):
 ######################################
 
 class AddNotesWindow(pyglet.window.Window):
+
     def __init__(self, x, y, item):
         super().__init__(470, 300, caption="Task Summary")
         self.set_location(x + 60, y + 120)
@@ -1330,8 +1368,7 @@ class AddNotesWindow(pyglet.window.Window):
         global notes_window_open
         notes_window_open = False
 
-        # 'Canvas not attached' bug fix \Lib\site-packages\pyglet\gl\base.py
-        # lines 306 and 328 were changed.  now has a self.is_ok var
+        # Canvas not attached bug fix referenced at top
         if self.context.is_ok == 0:
             notes_window_open = False
             self.close()
@@ -1342,7 +1379,7 @@ class AddNotesWindow(pyglet.window.Window):
             y=self.height-90,
             width=ADD_ICON_SIZE,
             height=ADD_ICON_SIZE,
-            color=ICON_BOX_COLOR,
+            color=ADD_TASK_BTN_COLOR,
             batch=self.main_batch,
             group=self.background
         )
@@ -1422,7 +1459,7 @@ class AddNotesWindow(pyglet.window.Window):
         if hit_test(self.add_task_btn, x, y):
             self.add_task_btn.color = BRIGHT_GREEN_HOVER
         else:
-            self.add_task_btn.color = ICON_BOX_COLOR
+            self.add_task_btn.color = ADD_TASK_BTN_COLOR
 
         if hit_test(self.add_note_box, x, y):
             self.set_mouse_cursor(self.text_cursor)
@@ -1445,9 +1482,6 @@ class AddNotesWindow(pyglet.window.Window):
             else:
                 self.set_focus(self.tab_group[0])
 
-        if symbol == pyglet.window.key.ESCAPE:
-            pyglet.app.exit()
-
     def on_text(self, text):
         if self.focus:
             self.focus.caret.on_text(text)
@@ -1459,9 +1493,6 @@ class AddNotesWindow(pyglet.window.Window):
     def on_text_motion_select(self, motion):
         if self.focus:
             self.focus.caret.on_text_motion_select(motion)
-
-        elif symbol == pyglet.window.key.ESCAPE:
-            pyglet.app.exit()
 
     def set_focus(self, focus):
         if self.focus:
@@ -1512,7 +1543,7 @@ class EnterProjectName(pyglet.window.Window):
             y=self.height-90,
             width=ADD_ICON_SIZE,
             height=ADD_ICON_SIZE,
-            color=ICON_BOX_COLOR,
+            color=ADD_TASK_BTN_COLOR,
             batch=self.main_batch,
             group=self.background)
 
@@ -1567,11 +1598,11 @@ class EnterProjectName(pyglet.window.Window):
                 self.close()
 
     def on_mouse_motion(self, x, y, dx, dy):
-        # Change "+" button color on hover
+
         if hit_test(self.add_task_btn, x, y):
             self.add_task_btn.color = BRIGHT_GREEN_HOVER
         else:
-            self.add_task_btn.color = ICON_BOX_COLOR
+            self.add_task_btn.color = ADD_TASK_BTN_COLOR
 
         if hit_test(self.add_name_box, x, y):
             self.set_mouse_cursor(self.text_cursor)
@@ -1595,9 +1626,6 @@ class EnterProjectName(pyglet.window.Window):
         if self.focus:
             self.focus.caret.on_text_motion_select(motion)
 
-        elif symbol == pyglet.window.key.ESCAPE:
-            pyglet.app.exit()
-
     def set_focus(self, focus):
         if self.focus:
             self.focus.caret.visible = False
@@ -1617,6 +1645,7 @@ class EnterProjectName(pyglet.window.Window):
 ###############################
 
 class InfoWindow(pyglet.window.Window):
+
     def __init__(self, task_description, x, y, caption="Description"):
         super().__init__(300, 200, caption=caption, visible=False)
 
@@ -1631,20 +1660,21 @@ class InfoWindow(pyglet.window.Window):
         if len(task_description) > 45:
             self.width = 500
             self.height = 400
-        self.greeting_label = pyglet.text.Label(self.task_description,
-                                                x=18, y=self.height-30, bold=True,
-                                                font_name=PROJ_FONT,
-                                                multiline=True, width=270, color=TEXT_COLOR)
-        self.xyz = 0
+        self.greeting_label = pyglet.text.Label(
+            self.task_description,
+            x=18, y=self.height-30, bold=True,
+            font_name=PROJ_FONT,
+            multiline=True,
+            width=270,
+            color=TEXT_COLOR
+        )
 
         if caption == "Description":
-
             description_window_open = True
         else:
             notes_window_open = True
 
-        # Canvas not attached' bug fix \Lib\site-packages\pyglet\gl\base.py
-        # lines 306 and 328 were changed.  now has a self.is_ok var
+        # Canvas not attached bug fix, referenced at top
         if self.context.is_ok == 0:
             if caption == "Description":
                 description_window_open = False
@@ -1660,10 +1690,14 @@ class InfoWindow(pyglet.window.Window):
         self.clear()
         self.greeting_label.draw()
 
-    # This ensures when a task button is pressed only one window can open
+    # Make sure only one window can open
     def on_close(self):
         global description_window_open
-        description_window_open = False
+        global notes_window_open
+        if self.caption == "Description":
+            description_window_open = False
+        else:
+            notes_window_open = False
         self.close()
 
 
@@ -1677,18 +1711,21 @@ class TextWidget(object):
     def __init__(self, text, x, y, width, main_batch,
                  foreground, height=None):
         self.document = pyglet.text.document.UnformattedDocument(text)
-        self.document.set_style(0, len(self.document.text),
-                                dict(color=(0, 0, 0, 255)))
+        self.document.set_style(
+            0,
+            len(self.document.text),
+            dict(color=(0, 0, 0, 255))
+        )
+
         self.main_batch = main_batch
         self.foreground = foreground
         self.text = text
 
         font = self.document.get_font()
 
-        if height:
-            pass
-        else:
+        if not height:
             height = font.ascent - font.descent
+
         self.layout = pyglet.text.layout.IncrementalTextLayout(
             self.document,
             width,
@@ -1696,7 +1733,9 @@ class TextWidget(object):
             multiline=True,
             wrap_lines=True,
             batch=self.main_batch,
-            group=self.foreground)
+            group=self.foreground
+        )
+
         self.caret = pyglet.text.caret.Caret(self.layout)
 
         self.layout.x = x
@@ -1738,9 +1777,8 @@ def countdown(dt, item, item_index):
 
     update_timer(TIMER, item['task_label'].text)
 
+
 # check the updatetimer function
-
-
 def display_project_time(dt):
 
     # Keeps track of total time programming still even if db is deleted
@@ -1805,15 +1843,13 @@ def organize_completed_tab(info):
 
 
 if __name__ == '__main__':
-    _ = db_startup()
-    if _ == False:
+    load_app = db_startup()
+
+    if load_app == False:
+        # No project has been started yet
         opener = EnterProjectName(100, 100)
         pyglet.app.run()
-        name = get_project_name()
-        main_window = Home_Window(WNDW_WIDTH, WNDW_HEIGHT, 'Task Tracker')
-        pyglet.app.run()
 
-    else:
-        name = get_project_name()
-        main_window = Home_Window(WNDW_WIDTH, WNDW_HEIGHT, 'Task Tracker')
-        pyglet.app.run()
+    name = get_project_name()
+    main_window = Home_Window(WNDW_WIDTH, WNDW_HEIGHT, 'Task Tracker')
+    pyglet.app.run()

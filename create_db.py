@@ -1,11 +1,10 @@
-import sqlite3, os
-
-
+import sqlite3
+import os
 
 
 def db_startup():
 
-    #Check to see if the projectname table was created or not
+    # Check to see if 'project name' table was created or not
     try:
         with open('main.db') as file:
             conn = sqlite3.connect('main.db')
@@ -19,9 +18,10 @@ def db_startup():
         create_database()
         return False
 
+
 def create_database():
-        path = os.path.abspath("tasktrack")
-        path = path[:-9]
-        conn = sqlite3.connect(path+"main.db")
-        conn.commit()
-        conn.close()
+    path = os.path.abspath("tasktrack")
+    path = path[:-9]
+    conn = sqlite3.connect(path+"main.db")
+    conn.commit()
+    conn.close()
