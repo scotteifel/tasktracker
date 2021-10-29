@@ -25,7 +25,7 @@ handlers_on = False
 
 ###################################################
 #
-# Home Window
+#                  Home Window
 #
 ###################################################
 
@@ -76,7 +76,7 @@ class Home_Window(pyglet.window.Window):
             bold=True,
             color=PROJECT_TITLE_COLOR,
             font_name='Georgia',
-            font_size=18,
+            font_size=19,
             batch=self.main_batch,
             group=self.foreground
         )
@@ -706,7 +706,7 @@ end this current project?"
 
 #####################################################
 #
-# Add Task Window
+#                 Add Task Window
 #
 #####################################################
 
@@ -811,7 +811,8 @@ class AddTaskWindow(pyglet.window.Window):
             self.height-340,
             240,
             self.main_batch,
-            self.foreground)
+            self.foreground
+        )
 
         self.description_box = pyglet.shapes.Rectangle(
             self.width//2-123,
@@ -844,7 +845,7 @@ class AddTaskWindow(pyglet.window.Window):
             x=self.width - 200,
             y=self.height - 220,
             bold=True,
-            color=TEXT_COLOR,
+            color=ALERT_COLOR,
             font_name=PROJ_FONT,
             batch=self.main_batch,
             group=self.foreground
@@ -913,6 +914,7 @@ class AddTaskWindow(pyglet.window.Window):
                         if item["task_label"].text == \
                                 self.task.document.text and \
                                 self.crnt_task != item["task_label"].text:
+                            print("invalid")
                             self.invalid_entry_label()
                             return
                     else:
@@ -983,7 +985,7 @@ class AddTaskWindow(pyglet.window.Window):
 
 #################################################
 #
-# Completed Window
+#              Completed Window
 #
 #################################################
 
@@ -1133,9 +1135,7 @@ class Completed_Window(pyglet.window.Window):
                 else:
                     pass
 
-
-# Clear all tasks so a new "page" of tasks can be drawn (back/forward)
-
+    # Clear all tasks so a new "page" of tasks can be drawn (back/forward)
 
     def delete_drawn_tasks(self):
         self.x_offset = 25
@@ -1334,7 +1334,7 @@ class Completed_Window(pyglet.window.Window):
 
 #######################################
 #
-# Add Notes Window
+#          Add Notes Window
 #
 ######################################
 
@@ -1508,7 +1508,7 @@ class AddNotesWindow(pyglet.window.Window):
 
 ##########################################
 #
-# Start New Project Window
+#       Start New Project Window
 #
 ##########################################
 
@@ -1708,8 +1708,7 @@ class InfoWindow(pyglet.window.Window):
 ##############################################
 
 class TextWidget(object):
-    def __init__(self, text, x, y, width, main_batch,
-                 foreground, height=None):
+    def __init__(self, text, x, y, width, main_batch, foreground, height=None):
         self.document = pyglet.text.document.UnformattedDocument(text)
         self.document.set_style(
             0,
@@ -1852,4 +1851,5 @@ if __name__ == '__main__':
 
     name = get_project_name()
     main_window = Home_Window(WNDW_WIDTH, WNDW_HEIGHT, 'Task Tracker')
+    main_window.set_icon(pyglet.image.load('task_track_icon.png'))
     pyglet.app.run()

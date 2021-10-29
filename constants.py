@@ -28,13 +28,13 @@ def window_placer():
 
 PROJ_FONT = 'Open Sans'
 
+###########
+#  Sizes 
+##########
 
-###  Sizes ###
-
-
-TASK_BX_LIST = []
-TASK_BX_HEIGHT = 50
-TASK_BX_WIDTH = 100
+# TASK_BX_LIST = []
+# TASK_BX_HEIGHT = 50
+# TASK_BX_WIDTH = 100
 
 WNDW_WIDTH = 600
 WNDW_HEIGHT = 550
@@ -43,8 +43,9 @@ WNDW_HEIGHT = 550
 ADD_ICON_SIZE = 40
 ADD_ICON_COORDS = [WNDW_WIDTH//2-(ADD_ICON_SIZE//2), WNDW_HEIGHT-120]
 
-
-####### Colors ##########
+#######################
+#        Colors 
+######################
 
 RED = (250, 82, 82)
 DARK_BLUE = (0, 38, 59)  
@@ -74,6 +75,8 @@ ADD_TASK_BTN_COLOR = GREEN
 RED_HOVER = RED
 COMPLETED_HOVER = LIGHTSABER_GREEN
 BRIGHT_GREEN_HOVER = LIGHTSABER_GREEN
+
+ALERT_COLOR = (240,62,62,255) # Shade of Red
 
 FINISH_PROJECT_BG_COLOR = LIGHT_GREEN
 # Might want to not highlight the completed tab if it's empty.
