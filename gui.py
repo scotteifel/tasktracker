@@ -1,6 +1,7 @@
 # from matplotlib.pyplot import loglog
+from AddTaskWindow import AddTaskWindow
 import pyglet
-import time
+# import time
 # import threading
 import os
 # import math
@@ -16,10 +17,17 @@ event_logger = pyglet.window.event.WindowEventLogger()
 # Change to True to see the events of the different windows in the console.
 handlers_on = False
 
+
 # 'Canvas not attached' bug fix \Lib\site-packages\pyglet\gl\base.py
-# lines 306 and 328 were changed.  now has a self.is_ok var
+# lines 306 and 328 were changed.  Now has a self.is_ok var
 # Bug happened sometimes when a window opened.  Didn't allow mouse events.
 
+
+###################################################
+#
+# Home Window
+#
+###################################################
 
 class Home_Window(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
@@ -69,7 +77,8 @@ class Home_Window(pyglet.window.Window):
             font_name='Georgia',
             font_size=18,
             batch=self.main_batch,
-            group=self.foreground)
+            group=self.foreground
+        )
 
         self.greeting_label = pyglet.text.Label(
             'To add a new task, press the plus sign.',
@@ -79,7 +88,8 @@ class Home_Window(pyglet.window.Window):
             color=TEXT_COLOR,
             font_name=PROJ_FONT,
             batch=self.main_batch,
-            group=self.foreground)
+            group=self.foreground
+        )
 
         self.project_time_count = pyglet.text.Label(
             proj_time + ' Min',
@@ -89,7 +99,8 @@ class Home_Window(pyglet.window.Window):
             color=TEXT_COLOR,
             font_name=PROJ_FONT,
             batch=self.main_batch,
-            group=self.foreground)
+            group=self.foreground
+        )
 
         self.project_time_label = pyglet.text.Label(
             'Total Project Time',
@@ -99,7 +110,8 @@ class Home_Window(pyglet.window.Window):
             color=TEXT_COLOR,
             font_name=PROJ_FONT,
             batch=self.main_batch,
-            group=self.foreground)
+            group=self.foreground
+        )
 
         self.add_task_btn = pyglet.shapes.Rectangle(
             x=ADD_ICON_COORDS[0],
@@ -108,7 +120,8 @@ class Home_Window(pyglet.window.Window):
             height=ADD_ICON_SIZE,
             color=ICON_BOX_COLOR,
             batch=self.main_batch,
-            group=self.background)
+            group=self.background
+        )
 
         self.add_task = pyglet.text.Label(
             '+',
@@ -119,7 +132,8 @@ class Home_Window(pyglet.window.Window):
             font_size=20,
             font_name=PROJ_FONT,
             batch=self.main_batch,
-            group=self.foreground)
+            group=self.foreground
+        )
 
         self.completed_tab_btn = pyglet.shapes.Rectangle(
             x=WNDW_WIDTH-175,
@@ -128,7 +142,8 @@ class Home_Window(pyglet.window.Window):
             height=27,
             color=COMPLETED_BG_COLOR,
             batch=self.main_batch,
-            group=self.background)
+            group=self.background
+        )
 
         self.completed_tab = pyglet.text.Label(
             'Completed',
@@ -139,7 +154,8 @@ class Home_Window(pyglet.window.Window):
             font_size=14,
             font_name=PROJ_FONT,
             batch=self.main_batch,
-            group=self.foreground)
+            group=self.foreground
+        )
 
         self.end_project = pyglet.text.Label(
             'Finish Project',
@@ -150,7 +166,8 @@ class Home_Window(pyglet.window.Window):
             font_size=16,
             font_name=PROJ_FONT,
             batch=self.main_batch,
-            group=self.foreground)
+            group=self.foreground
+        )
 
         self.end_project_btn = pyglet.shapes.Rectangle(
             x=WNDW_WIDTH-166,
@@ -159,7 +176,8 @@ class Home_Window(pyglet.window.Window):
             height=27,
             color=COMPLETED_BG_COLOR,
             batch=self.main_batch,
-            group=self.background)
+            group=self.background
+        )
 
         # Check to see if the x coordinate needs to be adjusted
         # of the project_time_count.
@@ -201,13 +219,13 @@ class Home_Window(pyglet.window.Window):
         try:
             if hit_test(self.yes_btn, x, y):
                 self.yes_btn.color = BRIGHT_GREEN_HOVER
-            # else:
-            #     self.yes_btn.color = (255, 255, 255, 255)
+            else:
+                self.yes_btn.color = GREY
 
             if hit_test(self.no_btn, x, y):
                 self.no_btn.color = RED_HOVER
-            # else:
-            #     self.no_btn.color = (255, 255, 255, 255)
+            else:
+                self.no_btn.color = GREY
         except:
             pass
 
@@ -256,7 +274,8 @@ class Home_Window(pyglet.window.Window):
                         WNDW_HEIGHT//2,
                         timer_amount=0,
                         task_text='Enter Task Name',
-                        task_description='Enter task description')
+                        task_description='Enter task description'
+                    )
 
             elif hit_test(self.completed_tab_btn, x, y):
                 if completed_window_open == True:
@@ -381,7 +400,8 @@ class Home_Window(pyglet.window.Window):
             WNDW_HEIGHT//2,
             timer_amount=info[2],
             task_text=info[0],
-            task_description=info[1])
+            task_description=info[1]
+        )
 
     def confirm_end(self):
 
@@ -395,6 +415,7 @@ project?'
             self.main_batch,
             self.foreground,
         )
+
         self.finish_prompt.document.set_style(0, 30, dict(font_size=11))
         self.finish_prompt.caret.visible = False
 
@@ -406,35 +427,39 @@ project?'
             color=TEXT_COLOR,
             font_size=13,
             batch=self.main_batch,
-            group=self.foreground)
+            group=self.foreground
+        )
 
         self.yes_btn = pyglet.shapes.Rectangle(
             x=WNDW_WIDTH-160,
             y=83,
             width=50,
             height=20,
-            # color=DODGER_BLUE,
+            color=GREY,
             batch=self.main_batch,
-            group=self.background)
+            group=self.background
+        )
 
         self.no = pyglet.text.Label(
             'No',
-            x=WNDW_WIDTH-65,
+            x=WNDW_WIDTH-58,
             y=85,
             bold=True,
             color=TEXT_COLOR,
             font_size=11,
             batch=self.main_batch,
-            group=self.foreground)
+            group=self.foreground
+        )
 
         self.no_btn = pyglet.shapes.Rectangle(
             x=WNDW_WIDTH-70,
             y=83,
             width=50,
             height=20,
-            # color=DODGER_BLUE,
+            color=GREY,
             batch=self.main_batch,
-            group=self.background)
+            group=self.background
+        )
 
     def yes_confirm(self):
         # Give the user one more opportunity to continue their project.
@@ -485,7 +510,8 @@ end this current project?"
             font_name=PROJ_FONT,
             color=TASK_LABELS_COLOR,
             batch=self.main_batch,
-            group=self.foreground)
+            group=self.foreground
+        )
 
         # Click this for the task description
         self.task_label_box = pyglet.shapes.Rectangle(
@@ -495,7 +521,8 @@ end this current project?"
             height=task_label_box_height,
             color=TASK_LABELS_BG_COLOR,
             batch=self.main_batch,
-            group=self.background)
+            group=self.background
+        )
 
         # Time count
         self.task_time = pyglet.text.Label(
@@ -506,7 +533,8 @@ end this current project?"
             color=TEXT_COLOR,
             font_name=PROJ_FONT,
             batch=self.main_batch,
-            group=self.foreground)
+            group=self.foreground
+        )
 
         # Box for time countdown
         self.task_time_box = pyglet.shapes.Rectangle(
@@ -516,7 +544,8 @@ end this current project?"
             height=23,
             color=GREY,
             batch=self.main_batch,
-            group=self.background)
+            group=self.background
+        )
 
         self.start = pyglet.text.Label(
             'Start',
@@ -526,7 +555,8 @@ end this current project?"
             color=TEXT_COLOR,
             font_name=PROJ_FONT,
             batch=self.main_batch,
-            group=self.foreground)
+            group=self.foreground
+        )
 
         # Box pressed to start timer
         self.start_timer_box = pyglet.shapes.Rectangle(
@@ -536,7 +566,8 @@ end this current project?"
             height=20,
             color=GREY,
             batch=self.main_batch,
-            group=self.background)
+            group=self.background
+        )
 
         self.delete_x = pyglet.text.Label(
             'x',
@@ -546,7 +577,8 @@ end this current project?"
             color=TEXT_COLOR,
             font_name=PROJ_FONT,
             batch=self.main_batch,
-            group=self.foreground)
+            group=self.foreground
+        )
 
         self.delete_x_box = pyglet.shapes.Rectangle(
             self.task_grid_x+134,
@@ -555,7 +587,8 @@ end this current project?"
             height=14,
             color=GREY,
             batch=self.main_batch,
-            group=self.background)
+            group=self.background
+        )
 
         self.edit = pyglet.text.Label(
             '...',
@@ -565,7 +598,8 @@ end this current project?"
             color=TEXT_COLOR,
             font_name=PROJ_FONT,
             batch=self.main_batch,
-            group=self.foreground)
+            group=self.foreground
+        )
 
         self.edit_box = pyglet.shapes.Rectangle(
             self.task_grid_x+131,
@@ -574,7 +608,8 @@ end this current project?"
             height=11,
             color=GREY,
             batch=self.main_batch,
-            group=self.background)
+            group=self.background
+        )
 
         self.check = pyglet.text.Label(
             "!",
@@ -584,7 +619,9 @@ end this current project?"
             color=TEXT_COLOR,
             font_name=PROJ_FONT,
             batch=self.main_batch,
-            group=self.foreground)
+            group=self.foreground
+        )
+
         # Checks to see if the task still has time remaining
         if timer == 0:
             check_box_color = BRIGHT_GREEN_HOVER
@@ -598,20 +635,23 @@ end this current project?"
             height=16,
             color=check_box_color,
             batch=self.main_batch,
-            group=self.background)
+            group=self.background
+        )
 
-        self.task_list.append({"task_label": self.task_label,
-                               "task_label_box": self.task_label_box,
-                               "task_time": self.task_time,
-                               "task_time_box": self.task_time_box,
-                               "start": self.start,
-                               "start_timer_box": self.start_timer_box,
-                               "delete_x": self.delete_x,
-                               "delete_x_box": self.delete_x_box,
-                               "edit": self.edit,
-                               "edit_box": self.edit_box,
-                               "check": self.check,
-                               "check_box": self.check_box})
+        self.task_list.append(
+            {"task_label": self.task_label,
+             "task_label_box": self.task_label_box,
+             "task_time": self.task_time,
+             "task_time_box": self.task_time_box,
+             "start": self.start,
+             "start_timer_box": self.start_timer_box,
+             "delete_x": self.delete_x,
+             "delete_x_box": self.delete_x_box,
+             "edit": self.edit,
+             "edit_box": self.edit_box,
+             "check": self.check,
+             "check_box": self.check_box}
+        )
 
         # Places each new task on a grid
         if self.task_grid_y > 90:
@@ -621,6 +661,12 @@ end this current project?"
             self.task_grid_y = int(self.height-210)
             self.task_grid_x += 160
 
+
+#####################################################
+#
+# Add Task Window
+#
+#####################################################
 
 class AddTaskWindow(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
@@ -643,7 +689,8 @@ class AddTaskWindow(pyglet.window.Window):
             color=TEXT_COLOR,
             font_name=PROJ_FONT,
             batch=self.main_batch,
-            group=self.foreground)
+            group=self.foreground
+        )
 
         self.add_task_btn = pyglet.shapes.Rectangle(
             (self.width//2)-11,
@@ -652,7 +699,8 @@ class AddTaskWindow(pyglet.window.Window):
             width=ADD_ICON_SIZE,
             height=ADD_ICON_SIZE,
             batch=self.main_batch,
-            group=self.background)
+            group=self.background
+        )
 
         self.add_task = pyglet.text.Label(
             '+',
@@ -663,7 +711,8 @@ class AddTaskWindow(pyglet.window.Window):
             font_size=20,
             font_name=PROJ_FONT,
             batch=self.main_batch,
-            group=self.foreground)
+            group=self.foreground
+        )
 
         self.minutes_label = pyglet.text.Label(
             "Minute total",
@@ -673,7 +722,8 @@ class AddTaskWindow(pyglet.window.Window):
             color=TEXT_COLOR,
             font_name=PROJ_FONT,
             batch=self.main_batch,
-            group=self.foreground)
+            group=self.foreground
+        )
 
         self.timer = TextWidget(
             str(kwargs["timer_amount"]),
@@ -681,7 +731,8 @@ class AddTaskWindow(pyglet.window.Window):
             self.height-200,
             35,
             self.main_batch,
-            self.foreground)
+            self.foreground
+        )
 
         self.timer_box = pyglet.shapes.Rectangle(
             self.width//2-9,
@@ -690,7 +741,8 @@ class AddTaskWindow(pyglet.window.Window):
             height=25,
             color=GREY,
             batch=self.main_batch,
-            group=self.background)
+            group=self.background
+        )
 
         self.task = TextWidget(
             self.crnt_task,
@@ -698,7 +750,8 @@ class AddTaskWindow(pyglet.window.Window):
             self.height-250,
             90,
             self.main_batch,
-            self.foreground)
+            self.foreground
+        )
 
         self.task_box = pyglet.shapes.Rectangle(
             self.width//2-48,
@@ -735,17 +788,13 @@ class AddTaskWindow(pyglet.window.Window):
         self.set_focus(self.timer)
 
         add_task_window_open = True
+
         # Canvas not attached bug fix in \Lib\site-packages\pyglet\gl\base.py
         # lines 306 and 328 were changed.  now has a self.is_ok var
         if self.context.is_ok == 0:
             add_task_window_open = False
             self.close()
         self.set_visible()
-        # if hasattr(self, 'context.is_ok'):
-        #     if self.context.is_ok == 0:
-        #         add_task_window_open = False
-        #         self.close()
-        # self.set_visible()
 
     def invalid_entry_label(self):
 
@@ -877,9 +926,6 @@ class AddTaskWindow(pyglet.window.Window):
             else:
                 self.set_focus(self.tab_group[0])
 
-        if symbol == pyglet.window.key.ESCAPE:
-            pyglet.app.exit()
-
     def on_close(self):
         global add_task_window_open
         add_task_window_open = False
@@ -896,6 +942,12 @@ class AddTaskWindow(pyglet.window.Window):
             self.focus.caret.mark = 0
             self.focus.caret.position = len(self.focus.document.text)
 
+
+#################################################
+#
+# Completed Window
+#
+#################################################
 
 class Completed_Window(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
@@ -919,10 +971,6 @@ class Completed_Window(pyglet.window.Window):
         if self.context.is_ok == 0:
             completed_window_open = False
             self.close()
-        # if hasattr(self, "context.is_ok"):
-        #     if self.context.is_ok == 0:
-        #         completed_window_open = False
-        #         self.close()
 
         # Makes sure the notes window is only opened once
         notes_window_open = False
@@ -950,7 +998,8 @@ class Completed_Window(pyglet.window.Window):
                 color=TEXT_COLOR,
                 font_name=PROJ_FONT,
                 batch=self.main_batch,
-                group=self.foreground)
+                group=self.foreground
+            )
 
             self.next_box = pyglet.shapes.Rectangle(
                 self.width - 117,
@@ -959,7 +1008,8 @@ class Completed_Window(pyglet.window.Window):
                 height=16,
                 color=GREY,
                 batch=self.main_batch,
-                group=self.background)
+                group=self.background
+            )
 
             self.previous = pyglet.text.Label(
                 '<<',
@@ -969,7 +1019,8 @@ class Completed_Window(pyglet.window.Window):
                 color=TEXT_COLOR,
                 font_name=PROJ_FONT,
                 batch=self.main_batch,
-                group=self.foreground)
+                group=self.foreground
+            )
 
             self.previous_box = pyglet.shapes.Rectangle(
                 self.width - 155,
@@ -978,7 +1029,8 @@ class Completed_Window(pyglet.window.Window):
                 height=16,
                 color=GREY,
                 batch=self.main_batch,
-                group=self.background)
+                group=self.background
+            )
 
         self.x_offset = 30
         self.y_offset = self.height - 160
@@ -991,7 +1043,8 @@ class Completed_Window(pyglet.window.Window):
             width=280,
             color=TEXT_COLOR,
             font_name=PROJ_FONT,
-            batch=self.main_batch)
+            batch=self.main_batch
+        )
 
         if row_counter > 1:
             self.greeting_label.font_size = 16
@@ -1150,28 +1203,32 @@ class Completed_Window(pyglet.window.Window):
             group=self.background
         )
 
-        self.notes_box_list.append({"task_name": self.task_name,
-                                    "notes_box": self.notes_box,
-                                    })
+        self.notes_box_list.append(
+            {"task_name": self.task_name,
+             "notes_box": self.notes_box, }
+        )
 
-        self.delete_list.append([self.task_description,
-                                self.task_name_intro,
-                                self.task_name,
-                                self.task_time_info_intro,
-                                self.task_time_info,
-                                self.task_description_intro,
-                                self.task_time_info,
-                                self.task_description_intro,
-                                self.notes,
-                                self.notes_box])
+        self.delete_list.append(
+            [self.task_description,
+             self.task_name_intro,
+             self.task_name,
+             self.task_time_info_intro,
+             self.task_time_info,
+             self.task_description_intro,
+             self.task_time_info,
+             self.task_description_intro,
+             self.notes,
+             self.notes_box]
+        )
 
         # This adds more lines to show the full description if it's
         # greater than the original 3 lines-worth of height.
         text_height = self.task_description.layout.get_line_count()
         if text_height > 3:
             self.task_description.layout.height = 18 * text_height
-            self.task_description.layout.y = \
-                (self.y_offset - 41) - (9 * text_height)
+            self.task_description.layout.y = (
+                self.y_offset - 41)-(9 * text_height)
+
         self.y_offset -= (20 * text_height)
         self.y_offset -= 110
 
@@ -1237,8 +1294,12 @@ class Completed_Window(pyglet.window.Window):
         completed_window_open = False
         self.close()
 
-# fix the notes layout
 
+#######################################
+#
+# Add Notes Window
+#
+######################################
 
 class AddNotesWindow(pyglet.window.Window):
     def __init__(self, x, y, item):
@@ -1253,12 +1314,18 @@ class AddNotesWindow(pyglet.window.Window):
         self.item = item
 
         label_text = "Add notes about the completed task?"
-        self.greeting_label = pyglet.text.Label(label_text,
-                                                x=90, y=self.height-30, bold=True,
-                                                multiline=True, width=350, color=TEXT_COLOR,
-                                                font_name=PROJ_FONT,
+        self.greeting_label = pyglet.text.Label(
+            label_text,
+            x=90,
+            y=self.height-30,
+            bold=True,
+            multiline=True,
+            width=350,
+            color=TEXT_COLOR,
+            font_name=PROJ_FONT,
+            batch=self.main_batch
+        )
 
-                                                batch=self.main_batch)
         icon_x = self.width//2-20
         global notes_window_open
         notes_window_open = False
@@ -1268,10 +1335,6 @@ class AddNotesWindow(pyglet.window.Window):
         if self.context.is_ok == 0:
             notes_window_open = False
             self.close()
-        # if hasattr(self, "context.is_ok"):
-        #     if self.context.is_ok == 0:
-        #         notes_window_open = False
-        #         self.close()
 
         self.set_visible()
         self.add_task_btn = pyglet.shapes.Rectangle(
@@ -1281,7 +1344,8 @@ class AddNotesWindow(pyglet.window.Window):
             height=ADD_ICON_SIZE,
             color=ICON_BOX_COLOR,
             batch=self.main_batch,
-            group=self.background)
+            group=self.background
+        )
 
         self.add_task = pyglet.text.Label(
             '+',
@@ -1292,7 +1356,8 @@ class AddNotesWindow(pyglet.window.Window):
             font_name=PROJ_FONT,
             font_size=20,
             batch=self.main_batch,
-            group=self.foreground)
+            group=self.foreground
+        )
 
         self.add_note = TextWidget(
             "Add Note",
@@ -1301,7 +1366,8 @@ class AddNotesWindow(pyglet.window.Window):
             200,
             self.main_batch,
             self.foreground,
-            height=30)
+            height=30
+        )
 
         self.add_note_box = pyglet.shapes.Rectangle(
             130,
@@ -1312,6 +1378,7 @@ class AddNotesWindow(pyglet.window.Window):
             batch=self.main_batch,
             group=self.background
         )
+
         self.text_cursor = self.get_system_mouse_cursor('text')
         self.focus = None
         self.set_focus(self.add_note)
@@ -1340,11 +1407,11 @@ class AddNotesWindow(pyglet.window.Window):
                 description = add_break_lines(description)
                 notes = add_break_lines(notes)
                 with open('records.txt', 'a') as file:
-                    _ = "Task Name: " + title + "\n" + "Description: " + \
+                    file_contents = "Task Name: " + title + "\n" + "Description: " + \
                         description+"\n" + "Estimated Time to Complete: " +\
                         str(time) + "\n" + "Notes: " + notes + "\n\n"
 
-                    file.write(_)
+                    file.write(file_contents)
 
                 remove_task(self.item)
                 COMPLETED_HOVER = BRIGHT_GREEN_HOVER
@@ -1408,6 +1475,12 @@ class AddNotesWindow(pyglet.window.Window):
             self.focus.caret.position = len(self.focus.document.text)
 
 
+##########################################
+#
+# Start New Project Window
+#
+##########################################
+
 class EnterProjectName(pyglet.window.Window):
     def __init__(self, x, y):
         super().__init__(470, 300, caption="Welcome to TaskTracker")
@@ -1420,12 +1493,17 @@ class EnterProjectName(pyglet.window.Window):
         self.foreground = pyglet.graphics.OrderedGroup(1)
 
         label_text = "Please enter your new project name below."
-        self.greeting_label = pyglet.text.Label(label_text,
-                                                x=90, y=self.height-30, bold=True,
-                                                multiline=True, width=350, color=TEXT_COLOR,
-                                                font_name=PROJ_FONT,
+        self.greeting_label = pyglet.text.Label(
+            label_text,
+            x=90,
+            y=self.height-30,
+            bold=True,
+            multiline=True,
+            width=350,
+            color=TEXT_COLOR,
+            font_name=PROJ_FONT,
+            batch=self.main_batch)
 
-                                                batch=self.main_batch)
         icon_x = self.width//2-20
         self.set_visible()
 
@@ -1512,7 +1590,8 @@ class EnterProjectName(pyglet.window.Window):
         if self.focus:
             self.focus.caret.on_text_motion(motion)
 
-    def on_text_motion_select(self, motion):
+    # Added symbol arg.
+    def on_text_motion_select(self, symbol, motion):
         if self.focus:
             self.focus.caret.on_text_motion_select(motion)
 
@@ -1530,6 +1609,12 @@ class EnterProjectName(pyglet.window.Window):
             self.focus.caret.mark = 0
             self.focus.caret.position = len(self.focus.document.text)
 
+
+################################
+#
+# Info Window
+#
+###############################
 
 class InfoWindow(pyglet.window.Window):
     def __init__(self, task_description, x, y, caption="Description"):
@@ -1567,14 +1652,6 @@ class InfoWindow(pyglet.window.Window):
             else:
                 notes_window_open = False
                 self.close()
-        # if hasattr(self, "context.is_ok"):
-        #     if self.context.is_ok == 0:
-        #         if caption == "Description":
-        #             description_window_open = False
-        #             self.close()
-        #         else:
-        #             notes_window_open = False
-        #             self.close()
 
         self.set_visible()
 
@@ -1589,9 +1666,12 @@ class InfoWindow(pyglet.window.Window):
         description_window_open = False
         self.close()
 
-########### End of Window Classes^ ###########
-##############################################
 
+##############################################
+#
+# End of Window Classes
+#
+##############################################
 
 class TextWidget(object):
     def __init__(self, text, x, y, width, main_batch,
@@ -1667,22 +1747,22 @@ def display_project_time(dt):
     new_time = run_project_timer()
 
     if new_time > 59:
-        _ = display_hours(new_time)
+        updated_time = display_hours(new_time)
     else:
-        _ = str(new_time)
+        updated_time = str(new_time) + ' Min'
 
-    main_window.project_time_count.text = _
+    main_window.project_time_count.text = updated_time
 
 
 def add_break_lines(item):
     count = len(item)//60
     if count > 0:
-        _ = 60
+        line_length = 60
         for x in range(count):
             # Breaks a long item into multiple lines.
-            item = item[:_]+"\n"+(" "*7)+item[_:]
+            item = item[:line_length]+"\n"+(" "*7)+item[line_length:]
 
-            _ += 62
+            line_length += 62
     return item
 
 
