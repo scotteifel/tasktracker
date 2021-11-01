@@ -869,6 +869,27 @@ class AddTaskWindow(pyglet.window.Window):
         add_task_window_open = False
         self.close()
 
+    def check_data(self):
+
+        if check_completed_names(self.task.document.text.strip()) == False:
+            # It equals 0 if no tasks have been added yet
+            if len(main_window.task_list) != 0:
+                # Make sure the name isn't already being used by a waiting
+                # task
+                for item in main_window.task_list:
+                    if item["task_label"].text == \
+                            self.task.document.text and \
+                            self.crnt_task != item["task_label"].text:
+                        print("invalid")
+                        self.invalid_entry_label()
+                        return
+                else:
+                    self.add_task_to_db()
+            else:
+                self.add_task_to_db()
+        else:
+            self.invalid_entry_label()
+
     def on_draw(self):
         pyglet.gl.glClearColor(1, 1, 1, 1)
         self.clear()
@@ -904,25 +925,7 @@ class AddTaskWindow(pyglet.window.Window):
             self.set_focus(self.timer)
 
         elif hit_test(self.add_task_btn, x, y):
-
-            if check_completed_names(self.task.document.text) == False:
-                # It equals 0 if no tasks have been added yet
-                if len(main_window.task_list) != 0:
-                    # Make sure the name isn't already being used by a waiting
-                    # task
-                    for item in main_window.task_list:
-                        if item["task_label"].text == \
-                                self.task.document.text and \
-                                self.crnt_task != item["task_label"].text:
-                            print("invalid")
-                            self.invalid_entry_label()
-                            return
-                    else:
-                        self.add_task_to_db()
-                else:
-                    self.add_task_to_db()
-            else:
-                self.invalid_entry_label()
+            self.check_data()
         else:
             self.set_focus(None)
 
@@ -953,7 +956,9 @@ class AddTaskWindow(pyglet.window.Window):
     def on_key_press(self, symbol, modifiers):
 
         if symbol == pyglet.window.key.ENTER:
-            pass
+            self.check_data()
+            print('here')
+            return
 
         # Switch boxes using the tab key
         if symbol == pyglet.window.key.TAB:
@@ -1351,10 +1356,10 @@ class AddNotesWindow(pyglet.window.Window):
         self.foreground = pyglet.graphics.OrderedGroup(1)
         self.item = item
 
-        label_text = "Add notes about the completed task?"
+        label_text = "Complete task."
         self.greeting_label = pyglet.text.Label(
             label_text,
-            x=90,
+            x=175,
             y=self.height-30,
             bold=True,
             multiline=True,

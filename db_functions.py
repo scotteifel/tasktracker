@@ -104,13 +104,13 @@ def run_project_timer():
     cur.execute('''CREATE TABLE IF NOT EXISTS project_time
                    (time INTEGER)''')
     conn.commit()
+    qry = cur.execute('''SELECT * FROM project_time''')
 
-    # Might not need this info fetch
-    # info = cur.execute('''SELECT * FROM project_time''')
     qry = cur.fetchone()
 
     # if statement used to catch the first time this func is run from program
     if not qry:
+        print('not query')
         cur.execute('''INSERT INTO project_time (time) VALUES (?)''',
                     (1,))
         conn.commit()
@@ -119,6 +119,7 @@ def run_project_timer():
         return 1
 
     new_time = qry[0] + 1
+    print('updating timer', new_time)
     cur.execute('''UPDATE project_time SET time = (?)''', (new_time,))
 
     conn.commit()
