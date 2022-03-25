@@ -1,16 +1,13 @@
 import pyglet
-from pyglet.window import mouse, key
 import os
+from pyglet.window import mouse, key
 
 from create_db import db_startup
 from db_functions import *
 from constants import *
 
-global TIMER
-global handlers_on
 
-
-# Enable window events logging
+# Enable logging of the window's events.
 event_logger = pyglet.window.event.WindowEventLogger()
 # Change to True to show events of the different windows in the console.
 handlers_on = False
@@ -23,12 +20,12 @@ handlers_on = False
 # attached so the window is shown to need an immediate restart
 #####################################################################
 
+
 ###################################################
 #
 #                  Home Window
 #
 ###################################################
-
 
 class Home_Window(pyglet.window.Window):
     def __init__(self, *args, **kwargs):
@@ -396,7 +393,7 @@ class Home_Window(pyglet.window.Window):
                         return
 
                     elif hit_test(item["delete_x_box"], x, y):
-                        # Resetting rendered task list for a fresh count
+                        # Resetting the rendered task list for a fresh count
                         self.rndrd_task_count = 0
                         remove_task(item)
                         return
@@ -405,11 +402,13 @@ class Home_Window(pyglet.window.Window):
 
                     if hit_test(item["check_box"], x, y):
                         x, y = self.get_location()
-                        # Add additional notes window
-                        # Canvas not attached error check referenced at top
+
+                        # Canvas not attached error check, referenced at top
                         # Auto retries opening window
+
                         while True:
                             try:
+                                # Add additional notes window
                                 this_window = self.notes_window = AddNotesWindow(
                                     x, y, item)
                                 if (this_window.context.is_ok):
@@ -832,7 +831,7 @@ class AddTaskWindow(pyglet.window.Window):
 
         add_task_window_open = True
 
-        # Canvas not attached bug fix referenced at top
+        # Canvas not attached bug fix, referenced at top
         if self.context.is_ok == 0:
             add_task_window_open = False
             self.close()
@@ -874,8 +873,7 @@ class AddTaskWindow(pyglet.window.Window):
         if check_completed_names(self.task.document.text.strip()) == False:
             # It equals 0 if no tasks have been added yet
             if len(main_window.task_list) != 0:
-                # Make sure the name isn't already being used by a waiting
-                # task
+                # Make sure the name isn't used by an already-created task
                 for item in main_window.task_list:
                     if item["task_label"].text == \
                             self.task.document.text and \
@@ -957,7 +955,6 @@ class AddTaskWindow(pyglet.window.Window):
 
         if symbol == pyglet.window.key.ENTER:
             self.check_data()
-            print('here')
             return
 
         # Switch boxes using the tab key
@@ -1093,7 +1090,6 @@ class Completed_Window(pyglet.window.Window):
         if row_counter > 1:
             self.greeting_label.font_size = 16
 
-        # self.completed_task_list = organize_completed_tab(info)
         self.completed_task_list = info
         self.delete_list = []
         self.page_number = 0
@@ -1141,7 +1137,6 @@ class Completed_Window(pyglet.window.Window):
                     pass
 
     # Clear all tasks so a new "page" of tasks can be drawn (back/forward)
-
     def delete_drawn_tasks(self):
         self.x_offset = 25
         self.y_offset = self.height - 160
@@ -1373,7 +1368,7 @@ class AddNotesWindow(pyglet.window.Window):
         global notes_window_open
         notes_window_open = False
 
-        # Canvas not attached bug fix referenced at top
+        # Canvas not attached bug fix, referenced at top
         if self.context.is_ok == 0:
             notes_window_open = False
             self.close()
@@ -1476,7 +1471,7 @@ class AddNotesWindow(pyglet.window.Window):
         if symbol == pyglet.window.key.ENTER:
             pass
 
-        # Switch from name box to description box
+        # Switch from name box to description box by pressing 'tab'
         if symbol == pyglet.window.key.TAB:
             if self.focus == self.tab_group[0]:
                 self.set_focus(self.tab_group[1])
@@ -1626,7 +1621,6 @@ class EnterProjectName(pyglet.window.Window):
         if self.focus:
             self.focus.caret.on_text_motion(motion)
 
-    # Added symbol arg.
     def on_text_motion_select(self, symbol, motion):
         if self.focus:
             self.focus.caret.on_text_motion_select(motion)
@@ -1786,6 +1780,7 @@ def countdown(dt, item, item_index):
 def display_project_time(dt):
 
     # Keeps track of total time programming still even if db is deleted
+    # Not sure what this comment means   ###
     new_time = run_project_timer()
 
     if new_time > 59:

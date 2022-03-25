@@ -8,6 +8,7 @@ def save_project_name(name):
     cur.execute('''CREATE TABLE IF NOT EXISTS project_name (name TEXT)''')
     conn.commit()
     cur.execute('''INSERT INTO project_name (name) VALUES(?)''', (name,))
+
     conn.commit()
     cur.close()
     conn.close()
@@ -18,9 +19,9 @@ def get_project_name():
     cur = conn.cursor()
     qry = cur.execute('''SELECT name FROM project_name''')
     item = qry.fetchone()[0]
+
     cur.close()
     conn.close()
-
     return item
 
 
@@ -46,6 +47,7 @@ def new_task_info(name, blurb, count):
     except:
         cur.execute('''INSERT INTO tasks (title, description, time)
                        VALUES(?,?,?)''', (name, blurb, count))
+
         conn.commit()
         cur.close()
         conn.close()
@@ -73,9 +75,9 @@ def check_completed_names(text):
             result = True
     except:
         result = False
+
     cur.close()
     conn.close()
-
     return result
 
 
@@ -86,7 +88,6 @@ def add_completed_task(title, description, time, notes):
     cur.execute('''CREATE TABLE IF NOT EXISTS completions (title TEXT,
         description TEXT, time INTEGER, notes TEXT)''')
 
-    # Removed query variable
     cur.execute('''INSERT INTO completions (title, description,
         time, notes) VALUES (?,?,?,?)''',
                 (title, description, time, notes))
@@ -113,6 +114,7 @@ def run_project_timer():
         print('not query')
         cur.execute('''INSERT INTO project_time (time) VALUES (?)''',
                     (1,))
+
         conn.commit()
         cur.close()
         conn.close()
@@ -154,6 +156,7 @@ def retrieve_project_time():
         info = qry.fetchone()[0]
     except:
         info = 0
+
     cur.close()
     conn.close()
     return info
@@ -179,6 +182,7 @@ def retrieve_task_info(task):
     cur = conn.cursor()
     qry = cur.execute('''SELECT * FROM tasks WHERE title = (?)''', (task,))
     info = qry.fetchone()
+
     cur.close()
     conn.close()
     return info
