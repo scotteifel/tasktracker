@@ -121,7 +121,6 @@ def run_project_timer():
         return 1
 
     new_time = qry[0] + 1
-    print('updating timer', new_time)
     cur.execute('''UPDATE project_time SET time = (?)''', (new_time,))
 
     conn.commit()
