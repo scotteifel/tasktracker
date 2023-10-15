@@ -79,7 +79,7 @@ class Home_Window(pyglet.window.Window):
         )
 
         self.greeting_label = pyglet.text.Label(
-            'To add a new task, press the plus sign.',
+            'Add new tasks, view completed tasks, or finish.',
             x=150,
             y=WNDW_HEIGHT-60,
             bold=True,
@@ -112,9 +112,9 @@ class Home_Window(pyglet.window.Window):
         )
 
         self.add_task_btn = pyglet.shapes.Rectangle(
-            x=ADD_ICON_COORDS[0],
+            x=ADD_ICON_COORDS[0]-5,
             y=ADD_ICON_COORDS[1],
-            width=ADD_ICON_SIZE,
+            width=ADD_ICON_SIZE+50,
             height=ADD_ICON_SIZE,
             color=ADD_TASK_BTN_COLOR,
             batch=self.main_batch,
@@ -122,12 +122,12 @@ class Home_Window(pyglet.window.Window):
         )
 
         self.add_task = pyglet.text.Label(
-            '+',
-            x=ADD_ICON_COORDS[0]+12,
-            y=ADD_ICON_COORDS[1]+10,
+            'Create Task',
+            x=ADD_ICON_COORDS[0],
+            y=ADD_ICON_COORDS[1]+15,
             bold=True,
             color=TEXT_COLOR,
-            font_size=20,
+            font_size=10,
             font_name=PROJ_FONT,
             batch=self.main_batch,
             group=self.foreground
@@ -1351,7 +1351,7 @@ class AddNotesWindow(pyglet.window.Window):
         self.foreground = pyglet.graphics.OrderedGroup(1)
         self.item = item
 
-        label_text = "Complete task."
+        label_text = "Complete task?"
         self.greeting_label = pyglet.text.Label(
             label_text,
             x=175,

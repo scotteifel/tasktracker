@@ -1,12 +1,5 @@
 /__pycache__
-virtual/
-venv/
-/venv
-extra_code.py
-task.txt
-this.py
 main.db
 records.txt
-plot.py
 task_track_full.jpg
-pyglet/__pycache__
+/taskenv

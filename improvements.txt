@@ -1,1 +1,9 @@
-Consider changing 24 hours to 1 day.
+Change plus button in add task.
+
+Add tooltips?
+
+Add "view completed" instead of just "completed"?
+
+Change edit to "Edit task information?" instead of same prev. prompt.
+
+Better labeling with "test task".
